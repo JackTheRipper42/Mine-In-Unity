@@ -7,14 +7,14 @@ namespace Assets.Scripts
         public float Speed = 1;
         public Quaternion OriginalRotationValue; // declare this as a Quaternion
 
-        readonly float rotationResetSpeed = 1.0f;
+        private const float RotationResetSpeed = 1.0f;
 
-        void Start()
+        protected virtual void Start()
         {
             OriginalRotationValue = transform.rotation; // save the initial rotation
         }
 
-        void Update()
+        protected virtual void Update()
         {
             if (Input.GetKey(KeyCode.W) || Input.GetKey(KeyCode.A) || Input.GetKey(KeyCode.S) || Input.GetKey(KeyCode.D))
             {
@@ -23,7 +23,7 @@ namespace Assets.Scripts
             else
             {
                 transform.rotation = Quaternion.Slerp(transform.rotation, OriginalRotationValue,
-                    Time.time*rotationResetSpeed);
+                    Time.time*RotationResetSpeed);
                 transform.rotation = Quaternion.Euler(transform.parent.root.transform.rotation.eulerAngles.x,
                     transform.parent.root.transform.rotation.eulerAngles.y, transform.rotation.eulerAngles.z);
             }

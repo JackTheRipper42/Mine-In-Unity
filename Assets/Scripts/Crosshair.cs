@@ -6,7 +6,7 @@ namespace Assets.Scripts
     {
         public Texture2D CrosshairImage;
 
-        void OnGUI()
+        protected virtual void OnGUI()
         {
             float xMin = (Screen.width/2) - (CrosshairImage.width/2);
             float yMin = (Screen.height/2) - (CrosshairImage.height/2);

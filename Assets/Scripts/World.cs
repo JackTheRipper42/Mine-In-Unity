@@ -13,8 +13,7 @@ namespace Assets.Scripts
         public float ViewRange = 30;
         public Chunk ChunkFab;
 
-        // Use this for initialization
-        void Awake()
+        protected virtual void Awake()
         {
             Cursor.visible = false;
             CurrentWorld = this;
@@ -24,8 +23,7 @@ namespace Assets.Scripts
             }
         }
 
-        // Update is called once per frame
-        void Update()
+        protected virtual void Update()
         {
             for (var x = transform.position.x - ViewRange; x < transform.position.x + ViewRange; x += ChunkWidth)
             {

@@ -9,17 +9,13 @@ namespace Assets.Scripts
         public float MaxInteractDistance = 8;
         public byte SelectedInventory;
         public bool ResetCamera;
-        public Vector3 Campos;
 
-
-        // Use this for initialization
-        void Start()
+        protected virtual void Start()
         {
             CurrentPlayerIo = this;
         }
 
-        // Update is called once per frame
-        void Update()
+        protected virtual void Update()
         {
             if (GameObject.FindWithTag("FPSController").transform.position.y < -20)
             {
