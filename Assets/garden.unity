@@ -375,7 +375,6 @@ MonoBehaviour:
   MaxInteractDistance: 8
   SelectedInventory: 0
   ResetCamera: 0
-  Campos: {x: 0, y: 0, z: 0}
 --- !u!1 &1006164615
 GameObject:
   m_ObjectHideFlags: 0
