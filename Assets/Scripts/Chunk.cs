@@ -247,10 +247,15 @@ namespace Assets.Scripts
             vertices.Add(corner + up + right);
             vertices.Add(corner + right);
 
-            var uvWidth = new Vector2(0.25f, 0.25f);
-            var uvCorner = new Vector2(0.00f, 0.75f);
+            const float length = 1/8f;
 
-            uvCorner.x += (float) (id - 1)/4;
+            //var uvWidth = new Vector2(0.25f, 0.25f);
+            //var uvCorner = new Vector2(0.00f, 0.75f);
+
+            var uvWidth = new Vector2(length, length);
+            var uvCorner = new Vector2(0.5f*length, 6.5f*length);
+
+            uvCorner.x += (id - 1)*length*2;
 
             uvs.Add(uvCorner);
             uvs.Add(new Vector2(uvCorner.x, uvCorner.y + uvWidth.y));
