@@ -30,14 +30,14 @@ namespace Assets.Scripts
                 for (var z = transform.position.z - ViewRange; z < transform.position.z + ViewRange; z += ChunkWidth)
                 {
 
-                    var pos = new Vector3(x, 0, z);
-                    pos.x = Mathf.Floor(pos.x/ChunkWidth)*ChunkWidth;
-                    pos.z = Mathf.Floor(pos.z/ChunkWidth)*ChunkWidth;
+                    var position = new Vector3(x, 0, z);
+                    position.x = Mathf.Floor(position.x/ChunkWidth)*ChunkWidth;
+                    position.z = Mathf.Floor(position.z/ChunkWidth)*ChunkWidth;
 
-                    var chunk = Chunk.FindChunk(pos);
+                    var chunk = Chunk.FindChunk(position);
                     if (chunk == null)
                     {
-                        Instantiate(ChunkFab, pos, Quaternion.identity);
+                        Instantiate(ChunkFab, position, Quaternion.identity);
                     }
                 }
             }

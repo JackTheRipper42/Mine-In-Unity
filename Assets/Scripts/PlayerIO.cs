@@ -40,7 +40,7 @@ namespace Assets.Scripts
                     {
                         var p = hit.point;
                         p -= hit.normal/4;
-                        chunk.SetBrick(0, p);
+                        chunk.SetId(0, p);
                     }
 
                     if (Input.GetMouseButtonDown(1))
@@ -50,7 +50,7 @@ namespace Assets.Scripts
                         {
                             p += hit.normal/4;
 
-                            chunk.SetBrick(SelectedInventory, p);
+                            chunk.SetId(SelectedInventory, p);
                         }
                     }
 
@@ -58,7 +58,7 @@ namespace Assets.Scripts
                     {
                         var p = hit.point;
                         p -= hit.normal/4;
-                        SelectedInventory = chunk.GetByte(p);
+                        SelectedInventory = chunk.GetId(p);
                     }
                 }
             }

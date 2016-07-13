@@ -40,39 +40,38 @@ namespace Assets.Scripts
             StartCoroutine(CreateVisualMesh());
         }
 
-        private static byte GetTheoreticalByte(Vector3 pos)
+        private static byte GetTheoreticalByte(Vector3 position)
         {
             Random.seed = World.CurrentWorld.Seed;
 
             var grain0Offset = new Vector3(Random.value*10000, Random.value*10000, Random.value*10000);
             var grain1Offset = new Vector3(Random.value*10000, Random.value*10000, Random.value*10000);
-            var grain2Offset = new Vector3(Random.value*10000, Random.value*10000, Random.value*10000);
 
-            return GetTheoreticalByte(pos, grain0Offset, grain1Offset, grain2Offset);
+            return GetTheoreticalByte(position, grain0Offset, grain1Offset);
         }
 
-        private static byte GetTheoreticalByte(Vector3 pos, Vector3 offset0, Vector3 offset1, Vector3 offset2)
+        private static byte GetTheoreticalByte(Vector3 position, Vector3 offset0, Vector3 offset1)
         {
             const float heightBase = 10f;
             var maxHeight = Height - 10f;
             var heightSwing = maxHeight - heightBase;
 
-            byte brick = 1;
+            byte id = 1;
 
-            var clusterValue = CalculateNoiseValue(pos, offset1, 0.02f);
-            var blobValue = CalculateNoiseValue(pos, offset1, 0.05f);
-            var mountainValue = CalculateNoiseValue(pos, offset0, 0.009f);
+            var clusterValue = CalculateNoiseValue(position, offset1, 0.02f);
+            var blobValue = CalculateNoiseValue(position, offset1, 0.05f);
+            var mountainValue = CalculateNoiseValue(position, offset0, 0.009f);
             if ((Math.Abs(mountainValue) < 0.001f) && (blobValue < 0.2f))
             {
-                brick = 2;
+                id = 2;
             }
             else if (clusterValue > 0.9f)
             {
-                brick = 1;
+                id = 1;
             }
             else if (clusterValue > 0.8f)
             {
-                brick = 3;
+                id = 3;
             }
 
             mountainValue = Mathf.Sqrt(mountainValue);
@@ -80,7 +79,7 @@ namespace Assets.Scripts
             mountainValue += heightBase;
             mountainValue += (blobValue*10) - 5f;
 
-            return mountainValue >= pos.y ? brick : (byte) 0;
+            return mountainValue >= position.y ? id : (byte) 0;
         }
 
         private void CalculateMapFromScratch()
@@ -123,15 +122,18 @@ namespace Assets.Scripts
                 {
                     for (var z = 0; z < Width; z++)
                     {
-                        if (_map[x, y, z] == 0) continue;
+                        if (_map[x, y, z] == 0)
+                        {
+                            continue;
+                        }
 
-                        var brick = _map[x, y, z];
+                        var id = _map[x, y, z];
 
                         // Left wall
                         if (IsTransparent(x - 1, y, z))
                         {
                             BuildFace(
-                                brick, 
+                                id, 
                                 new Vector3(x, y, z), 
                                 Vector3.up, 
                                 Vector3.forward, 
@@ -145,7 +147,7 @@ namespace Assets.Scripts
                         if (IsTransparent(x + 1, y, z))
                         {
                             BuildFace(
-                                brick, 
+                                id, 
                                 new Vector3(x + 1, y, z), 
                                 Vector3.up, 
                                 Vector3.forward, 
@@ -159,7 +161,7 @@ namespace Assets.Scripts
                         if (IsTransparent(x, y - 1, z))
                         {
                             BuildFace(
-                                brick, 
+                                id, 
                                 new Vector3(x, y, z), 
                                 Vector3.forward, 
                                 Vector3.right, 
@@ -173,7 +175,7 @@ namespace Assets.Scripts
                         if (IsTransparent(x, y + 1, z))
                         {
                             BuildFace(
-                                brick,
+                                id,
                                 new Vector3(x, y + 1, z),
                                 Vector3.forward,
                                 Vector3.right,
@@ -187,7 +189,7 @@ namespace Assets.Scripts
                         if (IsTransparent(x, y, z - 1))
                         {
                             BuildFace(
-                                brick, 
+                                id, 
                                 new Vector3(x, y, z), 
                                 Vector3.up, 
                                 Vector3.right, 
@@ -201,7 +203,7 @@ namespace Assets.Scripts
                         if (IsTransparent(x, y, z + 1))
                         {
                             BuildFace(
-                                brick, 
+                                id, 
                                 new Vector3(x, y, z + 1), 
                                 Vector3.up, 
                                 Vector3.right, 
@@ -229,14 +231,14 @@ namespace Assets.Scripts
         }
 
         private static void BuildFace(
-            byte brick, 
+            byte id, 
             Vector3 corner, 
             Vector3 up, 
             Vector3 right, 
             bool reversed,
             ICollection<Vector3> vertices, 
             ICollection<Vector2> uvs, 
-            ICollection<int> tris)
+            ICollection<int> triangles)
         {
             var index = vertices.Count;
 
@@ -248,7 +250,7 @@ namespace Assets.Scripts
             var uvWidth = new Vector2(0.25f, 0.25f);
             var uvCorner = new Vector2(0.00f, 0.75f);
 
-            uvCorner.x += (float) (brick - 1)/4;
+            uvCorner.x += (float) (id - 1)/4;
 
             uvs.Add(uvCorner);
             uvs.Add(new Vector2(uvCorner.x, uvCorner.y + uvWidth.y));
@@ -257,21 +259,21 @@ namespace Assets.Scripts
 
             if (reversed)
             {
-                tris.Add(index + 0);
-                tris.Add(index + 1);
-                tris.Add(index + 2);
-                tris.Add(index + 2);
-                tris.Add(index + 3);
-                tris.Add(index + 0);
+                triangles.Add(index + 0);
+                triangles.Add(index + 1);
+                triangles.Add(index + 2);
+                triangles.Add(index + 2);
+                triangles.Add(index + 3);
+                triangles.Add(index + 0);
             }
             else
             {
-                tris.Add(index + 1);
-                tris.Add(index + 0);
-                tris.Add(index + 2);
-                tris.Add(index + 3);
-                tris.Add(index + 2);
-                tris.Add(index + 0);
+                triangles.Add(index + 1);
+                triangles.Add(index + 0);
+                triangles.Add(index + 2);
+                triangles.Add(index + 3);
+                triangles.Add(index + 2);
+                triangles.Add(index + 0);
             }
 
         }
@@ -282,7 +284,7 @@ namespace Assets.Scripts
             {
                 return false;
             }
-            var brick = GetByte(x, y, z);
+            var brick = GetId(x, y, z);
             switch (brick)
             {
                 case 0:
@@ -292,7 +294,7 @@ namespace Assets.Scripts
             }
         }
 
-        public byte GetByte(int x, int y, int z)
+        public byte GetId(int x, int y, int z)
         {
 
             if ((y < 0) || (y >= Height))
@@ -312,31 +314,31 @@ namespace Assets.Scripts
                 {
                     return GetTheoreticalByte(worldPos);
                 }
-                return chunk.GetByte(worldPos);
+                return chunk.GetId(worldPos);
             }
             return _map[x, y, z];
         }
 
-        public byte GetByte(Vector3 worldPos)
+        public byte GetId(Vector3 worldPosition)
         {
-            worldPos -= transform.position;
-            var x = Mathf.FloorToInt(worldPos.x);
-            var y = Mathf.FloorToInt(worldPos.y);
-            var z = Mathf.FloorToInt(worldPos.z);
-            return GetByte(x, y, z);
+            worldPosition -= transform.position;
+            var x = Mathf.FloorToInt(worldPosition.x);
+            var y = Mathf.FloorToInt(worldPosition.y);
+            var z = Mathf.FloorToInt(worldPosition.z);
+            return GetId(x, y, z);
         }
 
-        public static Chunk FindChunk(Vector3 pos)
+        public static Chunk FindChunk(Vector3 position)
         {
 
             for (var a = 0; a < Chunks.Count; a++)
             {
                 var chunkPosition = Chunks[a].transform.position;
 
-                if ((pos.x < chunkPosition.x) ||
-                    (pos.z < chunkPosition.z) ||
-                    (pos.x >= chunkPosition.x + Width) ||
-                    (pos.z >= chunkPosition.z + Width))
+                if ((position.x < chunkPosition.x) ||
+                    (position.z < chunkPosition.z) ||
+                    (position.x >= chunkPosition.x + Width) ||
+                    (position.z >= chunkPosition.z + Width))
                 {
                     continue;
                 }
@@ -346,24 +348,24 @@ namespace Assets.Scripts
             return null;
         }
 
-        public bool SetBrick(byte brick, Vector3 worldPos)
+        public bool SetId(byte id, Vector3 worldPosition)
         {
-            worldPos -= transform.position;
-            return SetBrick(brick, Mathf.FloorToInt(worldPos.x), Mathf.FloorToInt(worldPos.y),
-                Mathf.FloorToInt(worldPos.z));
+            worldPosition -= transform.position;
+            return SetId(id, Mathf.FloorToInt(worldPosition.x), Mathf.FloorToInt(worldPosition.y),
+                Mathf.FloorToInt(worldPosition.z));
         }
 
-        public bool SetBrick(byte brick, int x, int y, int z)
+        public bool SetId(byte id, int x, int y, int z)
         {
             if ((x < 0) || (y < 0) || (z < 0) || (x >= Width) || (y >= Height || (z >= Width)))
             {
                 return false;
             }
-            if (_map[x, y, z] == brick)
+            if (_map[x, y, z] == id)
             {
                 return false;
             }
-            _map[x, y, z] = brick;
+            _map[x, y, z] = id;
             StartCoroutine(CreateVisualMesh());
 
             if (x == 0)
