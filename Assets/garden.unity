@@ -375,6 +375,52 @@ MonoBehaviour:
   MaxInteractDistance: 8
   SelectedInventory: 0
   ResetCamera: 0
+--- !u!1 &858667117
+GameObject:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  serializedVersion: 4
+  m_Component:
+  - 4: {fileID: 858667119}
+  - 114: {fileID: 858667118}
+  m_Layer: 0
+  m_Name: ResourceManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &858667118
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 858667117}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fbb7fea1484d66f439f48df23aaa2513, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  Textures:
+  - {fileID: 2800000, guid: 7e2deb4d7f8e83b4aa6f583629119139, type: 3}
+  - {fileID: 2800000, guid: 2ddafb412a127794393fbed65955169c, type: 3}
+  - {fileID: 2800000, guid: b4f1c53ae98e6e34ba40836dee8728fa, type: 3}
+  - {fileID: 2800000, guid: f7fd0d057bdebe84baadf55351250a37, type: 3}
+  - {fileID: 2800000, guid: 5f6621c17044c874b8452d6a8a9e59d1, type: 3}
+  Shader: {fileID: 51, guid: 0000000000000000f000000000000000, type: 0}
+--- !u!4 &858667119
+Transform:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 858667117}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -1.8521018, y: 1.2330173, z: 1.9633367}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_RootOrder: 3
 --- !u!1 &1006164615
 GameObject:
   m_ObjectHideFlags: 0

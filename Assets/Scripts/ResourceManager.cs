@@ -8,10 +8,17 @@ namespace Assets.Scripts
     public class ResourceManager : MonoBehaviour
     {
         private const int SubTextureSize = 128;
-        private const int TilesPerLength = 12;
+        private const int TilesPerLength = 16;
         private const int MainTextureSize = SubTextureSize*2*TilesPerLength;
 
         public Texture2D[] Textures;
+        public Shader Shader;
+
+        public Material Material { get; private set; }
+
+        public Vector2 UvSize { get; private set; }
+
+        public Dictionary<string, Vector2> UvPositions { get; private set; }
 
         protected virtual void Awake()
         {
@@ -21,6 +28,10 @@ namespace Assets.Scripts
             }
 
             var mainTexturePixels = new Color[MainTextureSize*MainTextureSize];
+            UvPositions = new Dictionary<string, Vector2>();
+            UvSize = new Vector2(
+                (float) SubTextureSize/MainTextureSize,
+                (float) SubTextureSize/MainTextureSize);
 
             for (var i = 0; i < Textures.Length; i++)
             {
@@ -32,6 +43,12 @@ namespace Assets.Scripts
                 
                 var mainOffsetX = column*2*SubTextureSize;
                 var mainOffsetY = row*2*SubTextureSize;
+
+                UvPositions.Add(
+                    subTexture.name,
+                    new Vector2(
+                        (float) (mainOffsetX + SubTextureSize/2)/MainTextureSize,
+                        (float) (mainOffsetY + SubTextureSize/2)/MainTextureSize));
 
                 for (var x = 0; x < SubTextureSize; x++)
                 {
@@ -112,10 +129,24 @@ namespace Assets.Scripts
                 }
             }
 
-            var mainTexture = new Texture2D(MainTextureSize, MainTextureSize, TextureFormat.ARGB32, true);
+            var mainTexture = new Texture2D(MainTextureSize, MainTextureSize, TextureFormat.ARGB32, false)
+            {
+                filterMode = FilterMode.Trilinear,
+                anisoLevel = 16,
+                wrapMode = TextureWrapMode.Clamp,
+                alphaIsTransparency = true,                
+            };
+           
             mainTexture.SetPixels(mainTexturePixels);
+            mainTexture.Apply(true, true);
 
-            File.WriteAllBytes("stuff.png", mainTexture.EncodeToPNG());
+            Material = new Material(Shader)
+            {
+                mainTexture = mainTexture,
+                color = Color.white
+            };
+
+            //File.WriteAllBytes("stuff.png", mainTexture.EncodeToPNG());
         }
 
         private static void SetMainTexturePixel(int x, int y, Color color, IList<Color> pixels)
