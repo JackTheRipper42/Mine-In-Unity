@@ -14,6 +14,8 @@ namespace Assets.Scripts
 
         public static List<Chunk> Chunks = new List<Chunk>();
 
+        private ResourceManager _resourceManager;
+
         private static int Width
         {
             get { return World.CurrentWorld.ChunkWidth; }
@@ -35,6 +37,10 @@ namespace Assets.Scripts
 
             _meshCollider = GetComponent<MeshCollider>();
             _meshFilter = GetComponent<MeshFilter>();
+            var meshRenderer = GetComponent<MeshRenderer>();
+
+            _resourceManager = FindObjectOfType<ResourceManager>();
+            meshRenderer.material = _resourceManager.Material;
 
             CalculateMapFromScratch();
             StartCoroutine(CreateVisualMesh());
@@ -230,7 +236,7 @@ namespace Assets.Scripts
             yield return 0;
         }
 
-        private static void BuildFace(
+        private void BuildFace(
             byte id, 
             Vector3 corner, 
             Vector3 up, 
@@ -247,15 +253,8 @@ namespace Assets.Scripts
             vertices.Add(corner + up + right);
             vertices.Add(corner + right);
 
-            const float length = 1/8f;
-
-            //var uvWidth = new Vector2(0.25f, 0.25f);
-            //var uvCorner = new Vector2(0.00f, 0.75f);
-
-            var uvWidth = new Vector2(length, length);
-            var uvCorner = new Vector2(0.5f*length, 6.5f*length);
-
-            uvCorner.x += (id - 1)*length*2;
+            var uvWidth = _resourceManager.UvSize;
+            var uvCorner = _resourceManager.UvPositions[id.ToString()];
 
             uvs.Add(uvCorner);
             uvs.Add(new Vector2(uvCorner.x, uvCorner.y + uvWidth.y));
