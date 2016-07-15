@@ -11,7 +11,6 @@ namespace Assets.Scripts
     [RequireComponent(typeof(MeshFilter))]
     public class Chunk : MonoBehaviour
     {
-
         public static List<Chunk> Chunks = new List<Chunk>();
 
         private ResourceManager _resourceManager;
@@ -288,14 +287,8 @@ namespace Assets.Scripts
             {
                 return false;
             }
-            var brick = GetId(x, y, z);
-            switch (brick)
-            {
-                case 0:
-                    return true;
-                default:
-                    return false;
-            }
+            var id = GetId(x, y, z);
+            return Block.Blocks[id].IsTransparent(Side.Up);
         }
 
         public int GetId(int x, int y, int z)
@@ -308,17 +301,17 @@ namespace Assets.Scripts
 
             if ((x < 0) || (z < 0) || (x >= Width) || (z >= Width))
             {
-                var worldPos = new Vector3(x, y, z) + transform.position;
-                var chunk = FindChunk(worldPos);
+                var worldPosition = new Vector3(x, y, z) + transform.position;
+                var chunk = FindChunk(worldPosition);
                 if (chunk == this)
                 {
                     return 0;
                 }
                 if (chunk == null)
                 {
-                    return GetTheoreticalId(worldPos);
+                    return GetTheoreticalId(worldPosition);
                 }
-                return chunk.GetId(worldPos);
+                return chunk.GetId(worldPosition);
             }
             return _map[x, y, z];
         }
@@ -355,7 +348,10 @@ namespace Assets.Scripts
         public bool SetId(int id, Vector3 worldPosition)
         {
             worldPosition -= transform.position;
-            return SetId(id, Mathf.FloorToInt(worldPosition.x), Mathf.FloorToInt(worldPosition.y),
+            return SetId(
+                id,
+                Mathf.FloorToInt(worldPosition.x),
+                Mathf.FloorToInt(worldPosition.y),
                 Mathf.FloorToInt(worldPosition.z));
         }
 
