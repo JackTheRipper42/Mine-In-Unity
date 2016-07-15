@@ -54,15 +54,15 @@ namespace Assets.Scripts
                 {
                     for (var y = 0; y < SubTextureSize; y++)
                     {
-                        var color = GetSubTexturePixel(x, y, subTexturePixels);
-                        SetMainTexturePixel(
+                        var color = GetSubTextureColor(x, y, subTexturePixels);
+                        SetMainTextureColor(
                             mainOffsetX + SubTextureSize/2 + x,
                             mainOffsetY + SubTextureSize/2 + y,
                             color,
                             mainTexturePixels);
                         if (x < SubTextureSize/2)
                         {
-                            SetMainTexturePixel(
+                            SetMainTextureColor(
                                 mainOffsetX + SubTextureSize/2 - x - 1,
                                 mainOffsetY + SubTextureSize/2 + y,
                                 color,
@@ -70,7 +70,7 @@ namespace Assets.Scripts
 
                             if (y < SubTextureSize/2)
                             {
-                                SetMainTexturePixel(
+                                SetMainTextureColor(
                                     mainOffsetX + SubTextureSize/2 - x - 1,
                                     mainOffsetY + SubTextureSize/2 - y - 1,
                                     color,
@@ -78,7 +78,7 @@ namespace Assets.Scripts
                             }
                             else
                             {
-                                SetMainTexturePixel(
+                                SetMainTextureColor(
                                     mainOffsetX + SubTextureSize/2 - x - 1,
                                     mainOffsetY + SubTextureSize/2 + 2*SubTextureSize - y - 1,
                                     color,
@@ -87,14 +87,14 @@ namespace Assets.Scripts
                         }
                         else
                         {
-                            SetMainTexturePixel(
+                            SetMainTextureColor(
                                 mainOffsetX + SubTextureSize/2 + 2*SubTextureSize - x - 1,
                                 mainOffsetY + SubTextureSize/2 + y,
                                 color,
                                 mainTexturePixels);
                             if (y < SubTextureSize/2)
                             {
-                                SetMainTexturePixel(
+                                SetMainTextureColor(
                                     mainOffsetX + SubTextureSize/2 + 2*SubTextureSize - x - 1,
                                     mainOffsetY + SubTextureSize/2 - y - 1,
                                     color,
@@ -102,7 +102,7 @@ namespace Assets.Scripts
                             }
                             else
                             {
-                                SetMainTexturePixel(
+                                SetMainTextureColor(
                                     mainOffsetX + SubTextureSize/2 + 2*SubTextureSize - x - 1,
                                     mainOffsetY + SubTextureSize/2 + 2*SubTextureSize - y - 1,
                                     color,
@@ -111,7 +111,7 @@ namespace Assets.Scripts
                         }
                         if (y < SubTextureSize/2)
                         {
-                            SetMainTexturePixel(
+                            SetMainTextureColor(
                                 mainOffsetX + SubTextureSize/2 + x,
                                 mainOffsetY + SubTextureSize/2 - y - 1,
                                 color,
@@ -119,7 +119,7 @@ namespace Assets.Scripts
                         }
                         else
                         {
-                            SetMainTexturePixel(
+                            SetMainTextureColor(
                                 mainOffsetX + SubTextureSize/2 + x,
                                 mainOffsetY + SubTextureSize/2 + 2*SubTextureSize - y - 1,
                                 color,
@@ -149,13 +149,13 @@ namespace Assets.Scripts
             //File.WriteAllBytes("stuff.png", mainTexture.EncodeToPNG());
         }
 
-        private static void SetMainTexturePixel(int x, int y, Color color, IList<Color> pixels)
+        private static void SetMainTextureColor(int x, int y, Color color, IList<Color> pixels)
         {
             var index = y*MainTextureSize + x;
             pixels[index] = color;
         }
 
-        private static Color GetSubTexturePixel(int x, int y, IList<Color> pixels)
+        private static Color GetSubTextureColor(int x, int y, IList<Color> pixels)
         {
             var index = y*SubTextureSize + x;
             return pixels[index];
