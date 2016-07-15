@@ -9,7 +9,6 @@ namespace Assets.Scripts
     public class ItemInstance : MonoBehaviour
     {
         private const int TextureSize = 32;
-        private const float Thickness = 0.05f;
         private const float PixelSize = 0.01f;
 
         public Texture2D Texture2D;
@@ -36,98 +35,26 @@ namespace Assets.Scripts
                         continue;
                     }
 
-                    var upIsTransparent = IsTransparent(x, y + 1, pixels);
-                    var downIsTransparent = IsTransparent(x, y - 1, pixels);
-                    var rightIsTransparent = IsTransparent(x + 1, y, pixels);
-                    var leftIsTransparent = IsTransparent(x - 1, y, pixels);
+                    var isRightTransparent = IsTransparent(x + 1, y, pixels);
+                    var isLeftTransparent = IsTransparent(x - 1, y, pixels);
+                    var isUpTransparent = IsTransparent(x, y + 1, pixels);
+                    var isDownTransparent = IsTransparent(x, y - 1, pixels);
 
                     var color = GetColor(x, y, pixels);
                     color.a = 1f;
 
-                    // Left wall
-                    if (leftIsTransparent)
-                    {
-                        BuildFace(
-                            color,
-                            new Vector3(x, y, 0),
-                            Vector3.up,
-                            Vector3.forward,
-                            false,
-                            vertices,
-                            colors,
-                            triangles);
-                    }
-
-                    // Right wall
-                    if (rightIsTransparent)
-                    {
-                        BuildFace(
-                            color,
-                            new Vector3(x + 1, y, 0),
-                            Vector3.up,
-                            Vector3.forward,
-                            true,
-                            vertices,
-                            colors,
-                            triangles);
-                    }
-
-                    // Bottom wall
-                    if (downIsTransparent)
-                    {
-                        BuildFace(
-                            color,
-                            new Vector3(x, y, 0),
-                            Vector3.forward,
-                            Vector3.right,
-                            false,
-                            vertices,
-                            colors,
-                            triangles);
-                    }
-
-                    // Top wall
-                    if (upIsTransparent)
-                    {
-                        BuildFace(
-                            color,
-                            new Vector3(x, y + 1, 0),
-                            Vector3.forward,
-                            Vector3.right,
-                            true,
-                            vertices,
-                            colors,
-                            triangles);
-                    }
-
-                    // Back
-                    BuildFace(
+                    BuildUpDownFace(
+                        x,
+                        y,
                         color,
-                        new Vector3(x, y, 0),
-                        Vector3.up,
-                        Vector3.right,
-                        true,
                         vertices,
                         colors,
-                        triangles);
-
-                    // Front
-                    BuildFace(
-                        color,
-                        new Vector3(x, y, 1),
-                        Vector3.up,
-                        Vector3.right,
-                        false,
-                        vertices,
-                        colors,
-                        triangles);
+                        triangles,
+                        isRightTransparent,
+                        isLeftTransparent,
+                        isUpTransparent,
+                        isDownTransparent);
                 }
-            }
-
-            for (var i = 0; i < vertices.Count; i++)
-            {
-                var vertex = vertices[i];
-                vertices[i] = new Vector3(vertex.x * PixelSize, vertex.y * PixelSize, vertex.z * Thickness);
             }
 
             var mesh = new Mesh
@@ -144,52 +71,100 @@ namespace Assets.Scripts
             _meshCollider.sharedMesh = mesh;
         }
 
-        private static void BuildFace(
+        private static void BuildUpDownFace(
+            int x,
+            int y,
             Color color,
-            Vector3 corner,
-            Vector3 up,
-            Vector3 right,
-            bool reversed,
             ICollection<Vector3> vertices,
             ICollection<Color> colors,
-            ICollection<int> triangles)
+            ICollection<int> triangles,
+            bool isRightTransparent,
+            bool isLeftTransparent,
+            bool isUpTransparent,
+            bool isDownTransparent)
         {
             var index = vertices.Count;
-            corner.x -= 0.5f;
 
-            vertices.Add(corner);
-            vertices.Add(corner + up);
-            vertices.Add(corner + up + right);
-            vertices.Add(corner + right);
+            var right = new Vector3(PixelSize, 0f, 0f);
+            var up = new Vector3(0f, PixelSize, 0f);
+            var frontCorner = new Vector3(x*PixelSize, y*PixelSize, 0f);
+            var backCorner = new Vector3(x*PixelSize, y*PixelSize, PixelSize);
+
+            vertices.Add(frontCorner);
+            vertices.Add(frontCorner + up);
+            vertices.Add(frontCorner + up + right);
+            vertices.Add(frontCorner + right);
+
+            vertices.Add(backCorner);
+            vertices.Add(backCorner + up);
+            vertices.Add(backCorner + up + right);
+            vertices.Add(backCorner + right);
 
             colors.Add(color);
             colors.Add(color);
             colors.Add(color);
             colors.Add(color);
 
-            if (reversed)
+            colors.Add(color);
+            colors.Add(color);
+            colors.Add(color);
+            colors.Add(color);
+
+            triangles.Add(index + 0);
+            triangles.Add(index + 1);
+            triangles.Add(index + 2);
+            triangles.Add(index + 0);
+            triangles.Add(index + 2);
+            triangles.Add(index + 3);
+
+            triangles.Add(index + 4);
+            triangles.Add(index + 7);
+            triangles.Add(index + 6);
+            triangles.Add(index + 4);
+            triangles.Add(index + 6);
+            triangles.Add(index + 5);
+
+            if (isRightTransparent)
             {
-                triangles.Add(index + 0);
-                triangles.Add(index + 1);
-                triangles.Add(index + 2);
-                triangles.Add(index + 2);
                 triangles.Add(index + 3);
-                triangles.Add(index + 0);
+                triangles.Add(index + 2);
+                triangles.Add(index + 6);
+                triangles.Add(index + 3);
+                triangles.Add(index + 6);
+                triangles.Add(index + 7);
             }
-            else
+            if (isLeftTransparent)
+            {
+                triangles.Add(index + 0);
+                triangles.Add(index + 4);
+                triangles.Add(index + 5);
+                triangles.Add(index + 0);
+                triangles.Add(index + 5);
+                triangles.Add(index + 1);
+            }
+            if (isUpTransparent)
             {
                 triangles.Add(index + 1);
-                triangles.Add(index + 0);
+                triangles.Add(index + 5);
+                triangles.Add(index + 6);
+                triangles.Add(index + 1);
+                triangles.Add(index + 6);
                 triangles.Add(index + 2);
+            }
+            if (isDownTransparent)
+            {
+                triangles.Add(index + 0);
                 triangles.Add(index + 3);
-                triangles.Add(index + 2);
+                triangles.Add(index + 7);
                 triangles.Add(index + 0);
+                triangles.Add(index + 7);
+                triangles.Add(index + 4);
             }
         }
 
         private static Color GetColor(int x, int y, IList<Color> pixels)
         {
-            var index = y * TextureSize + x;
+            var index = y*TextureSize + x;
             return pixels[index];
         }
 
@@ -197,7 +172,7 @@ namespace Assets.Scripts
         {
             if (x < 0 || y < 0 || x >= TextureSize || y >= TextureSize)
             {
-                return false;
+                return true;
             }
             var color = GetColor(x, y, pixels);
             return color.a < 1f;
