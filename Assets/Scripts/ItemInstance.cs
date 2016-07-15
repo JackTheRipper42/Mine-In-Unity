@@ -8,10 +8,7 @@ namespace Assets.Scripts
     [RequireComponent(typeof(MeshFilter))]
     public class ItemInstance : MonoBehaviour
     {
-        private const int TextureSize = 32;
-        private const float PixelSize = 0.01f;
-
-        public Texture2D Texture2D;
+        public string TextureName;
 
         private MeshCollider _meshCollider;
         private MeshFilter _meshFilter;
@@ -22,13 +19,14 @@ namespace Assets.Scripts
             _meshFilter = GetComponent<MeshFilter>();
             var vertices = new List<Vector3>();
             var triangles = new List<int>();
-            var colors = new List<Color>();
+            var vertexColors = new List<Color>();
 
-            var pixels = Texture2D.GetPixels();
+            var resourceManager = FindObjectOfType<ResourceManager>();
+            var pixels = resourceManager.ItemColors[TextureName];
 
-            for (var x = 0; x < TextureSize; x++)
+            for (var x = 0; x < ResourceManager.ItemTextureSize; x++)
             {
-                for (var y = 0; y < TextureSize; y++)
+                for (var y = 0; y < ResourceManager.ItemTextureSize; y++)
                 {
                     if (IsTransparent(x, y, pixels))
                     {
@@ -48,7 +46,7 @@ namespace Assets.Scripts
                         y,
                         color,
                         vertices,
-                        colors,
+                        vertexColors,
                         triangles,
                         isRightTransparent,
                         isLeftTransparent,
@@ -60,7 +58,7 @@ namespace Assets.Scripts
             var mesh = new Mesh
             {
                 vertices = vertices.ToArray(),
-                colors = colors.ToArray(),
+                colors = vertexColors.ToArray(),
                 triangles = triangles.ToArray()
             };
             mesh.RecalculateBounds();
@@ -85,10 +83,16 @@ namespace Assets.Scripts
         {
             var index = vertices.Count;
 
-            var right = new Vector3(PixelSize, 0f, 0f);
-            var up = new Vector3(0f, PixelSize, 0f);
-            var frontCorner = new Vector3(x*PixelSize, y*PixelSize, 0f);
-            var backCorner = new Vector3(x*PixelSize, y*PixelSize, PixelSize);
+            var right = new Vector3(ResourceManager.ItemTexturePixelSize, 0f, 0f);
+            var up = new Vector3(0f, ResourceManager.ItemTexturePixelSize, 0f);
+            var frontCorner = new Vector3(
+                x*ResourceManager.ItemTexturePixelSize,
+                y*ResourceManager.ItemTexturePixelSize,
+                0f);
+            var backCorner = new Vector3(
+                x*ResourceManager.ItemTexturePixelSize,
+                y*ResourceManager.ItemTexturePixelSize,
+                ResourceManager.ItemTexturePixelSize);
 
             vertices.Add(frontCorner);
             vertices.Add(frontCorner + up);
@@ -164,13 +168,13 @@ namespace Assets.Scripts
 
         private static Color GetColor(int x, int y, IList<Color> pixels)
         {
-            var index = y*TextureSize + x;
+            var index = y*ResourceManager.ItemTextureSize + x;
             return pixels[index];
         }
 
         private static bool IsTransparent(int x, int y, IList<Color> pixels)
         {
-            if (x < 0 || y < 0 || x >= TextureSize || y >= TextureSize)
+            if (x < 0 || y < 0 || x >= ResourceManager.ItemTextureSize || y >= ResourceManager.ItemTextureSize)
             {
                 return true;
             }

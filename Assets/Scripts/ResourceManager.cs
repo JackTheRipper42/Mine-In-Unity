@@ -1,86 +1,101 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using UnityEngine;
 
 namespace Assets.Scripts
 {
     public class ResourceManager : MonoBehaviour
     {
-        private const int SubTextureSize = 128;
-        private const int TilesPerLength = 16;
-        private const int MainTextureSize = SubTextureSize*2*TilesPerLength;
+        public const int ItemTextureSize = 32;
+        public const float ItemTexturePixelSize = 0.01f;
 
-        public Texture2D[] Textures;
-        public Shader Shader;
+        private const int BlockTextureSize = 128;
+        private const int BlockTexturesPerLength = 16;
+        private const int ChunkTextureSize = BlockTextureSize*2*BlockTexturesPerLength;
 
-        public Material Material { get; private set; }
+        public Texture2D[] BlockTextures;
+        public Texture2D[] ItemTextures;
+        public Shader ChunkShader;
 
-        public Vector2 UvSize { get; private set; }
+        public Material ChunkMaterial { get; private set; }
 
-        public Dictionary<string, Vector2> UvPositions { get; private set; }
+        public Vector2 BlockUvSize { get; private set; }
+
+        public Dictionary<string, Vector2> BlockUvPositions { get; private set; }
+
+        public Dictionary<string, Color[]> ItemColors { get; private set; } 
 
         protected virtual void Awake()
         {
-            if (Textures.Length > TilesPerLength*TilesPerLength)
+            LoadBlockTextures();
+            LoadItemTextures();
+        }
+
+        private void LoadBlockTextures()
+        {
+            if (BlockTextures.Length > BlockTexturesPerLength * BlockTexturesPerLength)
             {
                 throw new InvalidOperationException("There are to many textures.");
             }
 
-            var mainTexturePixels = new Color[MainTextureSize*MainTextureSize];
-            UvPositions = new Dictionary<string, Vector2>();
-            UvSize = new Vector2(
-                (float) SubTextureSize/MainTextureSize,
-                (float) SubTextureSize/MainTextureSize);
+            var mainTexturePixels = new Color[ChunkTextureSize * ChunkTextureSize];
+            BlockUvPositions = new Dictionary<string, Vector2>();
+            BlockUvSize = new Vector2(
+                (float)BlockTextureSize / ChunkTextureSize,
+                (float)BlockTextureSize / ChunkTextureSize);
 
-            for (var i = 0; i < Textures.Length; i++)
+            for (var i = 0; i < BlockTextures.Length; i++)
             {
-                var column = i%TilesPerLength;
-                var row = i/TilesPerLength;
+                var column = i % BlockTexturesPerLength;
+                var row = i / BlockTexturesPerLength;
 
-                var subTexture = Textures[i];
-                var subTexturePixels = subTexture.GetPixels();
-                
-                var mainOffsetX = column*2*SubTextureSize;
-                var mainOffsetY = row*2*SubTextureSize;
-
-                UvPositions.Add(
-                    subTexture.name,
-                    new Vector2(
-                        (float) (mainOffsetX + SubTextureSize/2)/MainTextureSize,
-                        (float) (mainOffsetY + SubTextureSize/2)/MainTextureSize));
-
-                for (var x = 0; x < SubTextureSize; x++)
+                var blockTexture = BlockTextures[i];
+                if (blockTexture.width != BlockTextureSize || blockTexture.height != BlockTextureSize)
                 {
-                    for (var y = 0; y < SubTextureSize; y++)
+                    throw new InvalidOperationException("The texture size is invalid.");
+                }
+                var blockTexturePixels = blockTexture.GetPixels();
+
+                var mainOffsetX = column * 2 * BlockTextureSize;
+                var mainOffsetY = row * 2 * BlockTextureSize;
+
+                BlockUvPositions.Add(
+                    blockTexture.name,
+                    new Vector2(
+                        (float)(mainOffsetX + BlockTextureSize / 2) / ChunkTextureSize,
+                        (float)(mainOffsetY + BlockTextureSize / 2) / ChunkTextureSize));
+
+                for (var x = 0; x < BlockTextureSize; x++)
+                {
+                    for (var y = 0; y < BlockTextureSize; y++)
                     {
-                        var color = GetSubTextureColor(x, y, subTexturePixels);
+                        var color = GetSubTextureColor(x, y, blockTexturePixels);
                         SetMainTextureColor(
-                            mainOffsetX + SubTextureSize/2 + x,
-                            mainOffsetY + SubTextureSize/2 + y,
+                            mainOffsetX + BlockTextureSize / 2 + x,
+                            mainOffsetY + BlockTextureSize / 2 + y,
                             color,
                             mainTexturePixels);
-                        if (x < SubTextureSize/2)
+                        if (x < BlockTextureSize / 2)
                         {
                             SetMainTextureColor(
-                                mainOffsetX + SubTextureSize/2 - x - 1,
-                                mainOffsetY + SubTextureSize/2 + y,
+                                mainOffsetX + BlockTextureSize / 2 - x - 1,
+                                mainOffsetY + BlockTextureSize / 2 + y,
                                 color,
                                 mainTexturePixels);
 
-                            if (y < SubTextureSize/2)
+                            if (y < BlockTextureSize / 2)
                             {
                                 SetMainTextureColor(
-                                    mainOffsetX + SubTextureSize/2 - x - 1,
-                                    mainOffsetY + SubTextureSize/2 - y - 1,
+                                    mainOffsetX + BlockTextureSize / 2 - x - 1,
+                                    mainOffsetY + BlockTextureSize / 2 - y - 1,
                                     color,
                                     mainTexturePixels);
                             }
                             else
                             {
                                 SetMainTextureColor(
-                                    mainOffsetX + SubTextureSize/2 - x - 1,
-                                    mainOffsetY + SubTextureSize/2 + 2*SubTextureSize - y - 1,
+                                    mainOffsetX + BlockTextureSize / 2 - x - 1,
+                                    mainOffsetY + BlockTextureSize / 2 + 2 * BlockTextureSize - y - 1,
                                     color,
                                     mainTexturePixels);
                             }
@@ -88,40 +103,40 @@ namespace Assets.Scripts
                         else
                         {
                             SetMainTextureColor(
-                                mainOffsetX + SubTextureSize/2 + 2*SubTextureSize - x - 1,
-                                mainOffsetY + SubTextureSize/2 + y,
+                                mainOffsetX + BlockTextureSize / 2 + 2 * BlockTextureSize - x - 1,
+                                mainOffsetY + BlockTextureSize / 2 + y,
                                 color,
                                 mainTexturePixels);
-                            if (y < SubTextureSize/2)
+                            if (y < BlockTextureSize / 2)
                             {
                                 SetMainTextureColor(
-                                    mainOffsetX + SubTextureSize/2 + 2*SubTextureSize - x - 1,
-                                    mainOffsetY + SubTextureSize/2 - y - 1,
+                                    mainOffsetX + BlockTextureSize / 2 + 2 * BlockTextureSize - x - 1,
+                                    mainOffsetY + BlockTextureSize / 2 - y - 1,
                                     color,
                                     mainTexturePixels);
                             }
                             else
                             {
                                 SetMainTextureColor(
-                                    mainOffsetX + SubTextureSize/2 + 2*SubTextureSize - x - 1,
-                                    mainOffsetY + SubTextureSize/2 + 2*SubTextureSize - y - 1,
+                                    mainOffsetX + BlockTextureSize / 2 + 2 * BlockTextureSize - x - 1,
+                                    mainOffsetY + BlockTextureSize / 2 + 2 * BlockTextureSize - y - 1,
                                     color,
                                     mainTexturePixels);
                             }
                         }
-                        if (y < SubTextureSize/2)
+                        if (y < BlockTextureSize / 2)
                         {
                             SetMainTextureColor(
-                                mainOffsetX + SubTextureSize/2 + x,
-                                mainOffsetY + SubTextureSize/2 - y - 1,
+                                mainOffsetX + BlockTextureSize / 2 + x,
+                                mainOffsetY + BlockTextureSize / 2 - y - 1,
                                 color,
                                 mainTexturePixels);
                         }
                         else
                         {
                             SetMainTextureColor(
-                                mainOffsetX + SubTextureSize/2 + x,
-                                mainOffsetY + SubTextureSize/2 + 2*SubTextureSize - y - 1,
+                                mainOffsetX + BlockTextureSize / 2 + x,
+                                mainOffsetY + BlockTextureSize / 2 + 2 * BlockTextureSize - y - 1,
                                 color,
                                 mainTexturePixels);
                         }
@@ -129,35 +144,43 @@ namespace Assets.Scripts
                 }
             }
 
-            var mainTexture = new Texture2D(MainTextureSize, MainTextureSize, TextureFormat.ARGB32, false)
+            var chunkTexture = new Texture2D(ChunkTextureSize, ChunkTextureSize, TextureFormat.ARGB32, false)
             {
                 filterMode = FilterMode.Trilinear,
                 anisoLevel = 16,
                 wrapMode = TextureWrapMode.Clamp,
-                alphaIsTransparency = true,                
+                alphaIsTransparency = true,
             };
-           
-            mainTexture.SetPixels(mainTexturePixels);
-            mainTexture.Apply(true, true);
 
-            Material = new Material(Shader)
+            chunkTexture.SetPixels(mainTexturePixels);
+            chunkTexture.Apply(true, true);
+
+            ChunkMaterial = new Material(ChunkShader)
             {
-                mainTexture = mainTexture,
+                mainTexture = chunkTexture,
                 color = Color.white
             };
+        }
 
-            //File.WriteAllBytes("stuff.png", mainTexture.EncodeToPNG());
+        private void LoadItemTextures()
+        {
+            ItemColors = new Dictionary<string, Color[]>();
+
+            foreach (var itemTexture in ItemTextures)
+            {
+                ItemColors.Add(itemTexture.name, itemTexture.GetPixels());
+            }
         }
 
         private static void SetMainTextureColor(int x, int y, Color color, IList<Color> pixels)
         {
-            var index = y*MainTextureSize + x;
+            var index = y*ChunkTextureSize + x;
             pixels[index] = color;
         }
 
         private static Color GetSubTextureColor(int x, int y, IList<Color> pixels)
         {
-            var index = y*SubTextureSize + x;
+            var index = y*BlockTextureSize + x;
             return pixels[index];
         }
     }

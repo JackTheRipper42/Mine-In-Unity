@@ -40,7 +40,7 @@ namespace Assets.Scripts
             var meshRenderer = GetComponent<MeshRenderer>();
 
             _resourceManager = FindObjectOfType<ResourceManager>();
-            meshRenderer.material = _resourceManager.Material;
+            meshRenderer.material = _resourceManager.ChunkMaterial;
 
             CalculateMapFromScratch();
             StartCoroutine(CreateVisualMesh());
@@ -253,8 +253,8 @@ namespace Assets.Scripts
             vertices.Add(corner + up + right);
             vertices.Add(corner + right);
 
-            var uvWidth = _resourceManager.UvSize;
-            var uvCorner = _resourceManager.UvPositions[id.ToString()];
+            var uvWidth = _resourceManager.BlockUvSize;
+            var uvCorner = _resourceManager.BlockUvPositions[id.ToString()];
 
             uvs.Add(uvCorner);
             uvs.Add(new Vector2(uvCorner.x, uvCorner.y + uvWidth.y));
