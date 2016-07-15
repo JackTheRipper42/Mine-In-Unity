@@ -8,7 +8,7 @@ namespace Assets.Scripts
     [RequireComponent(typeof(MeshFilter))]
     public class ItemInstance : MonoBehaviour
     {
-        public string TextureName;
+        public int Id;
 
         private MeshCollider _meshCollider;
         private MeshFilter _meshFilter;
@@ -22,7 +22,7 @@ namespace Assets.Scripts
             var vertexColors = new List<Color>();
 
             var resourceManager = FindObjectOfType<ResourceManager>();
-            var pixels = resourceManager.ItemColors[TextureName];
+            var pixels = resourceManager.ItemColors[Item.Items[Id].TextureName(0)];
 
             for (var x = 0; x < ResourceManager.ItemTextureSize; x++)
             {

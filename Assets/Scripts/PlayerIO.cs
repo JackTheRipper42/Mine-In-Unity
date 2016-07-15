@@ -7,7 +7,7 @@ namespace Assets.Scripts
 
         public static PlayerIO CurrentPlayerIo;
         public float MaxInteractDistance = 8;
-        public byte SelectedInventory;
+        public int SelectedInventory;
         public bool ResetCamera;
 
         protected virtual void Start()

@@ -26,7 +26,7 @@ namespace Assets.Scripts
             get { return World.CurrentWorld.ChunkHeight; }
         }
 
-        private byte[,,] _map;
+        private int[,,] _map;
         private Mesh _visualMesh;
         private MeshCollider _meshCollider;
         private MeshFilter _meshFilter;
@@ -46,38 +46,38 @@ namespace Assets.Scripts
             StartCoroutine(CreateVisualMesh());
         }
 
-        private static byte GetTheoreticalByte(Vector3 position)
+        private static int GetTheoreticalId(Vector3 position)
         {
             Random.seed = World.CurrentWorld.Seed;
 
             var grain0Offset = new Vector3(Random.value*10000, Random.value*10000, Random.value*10000);
             var grain1Offset = new Vector3(Random.value*10000, Random.value*10000, Random.value*10000);
 
-            return GetTheoreticalByte(position, grain0Offset, grain1Offset);
+            return GetTheoreticalId(position, grain0Offset, grain1Offset);
         }
 
-        private static byte GetTheoreticalByte(Vector3 position, Vector3 offset0, Vector3 offset1)
+        private static int GetTheoreticalId(Vector3 position, Vector3 offset0, Vector3 offset1)
         {
             const float heightBase = 10f;
             var maxHeight = Height - 10f;
             var heightSwing = maxHeight - heightBase;
 
-            byte id = 1;
+            int id = Block.Grass.Id;
 
             var clusterValue = CalculateNoiseValue(position, offset1, 0.02f);
             var blobValue = CalculateNoiseValue(position, offset1, 0.05f);
             var mountainValue = CalculateNoiseValue(position, offset0, 0.009f);
             if ((Math.Abs(mountainValue) < 0.001f) && (blobValue < 0.2f))
             {
-                id = 2;
+                id = Block.Dirt.Id;
             }
             else if (clusterValue > 0.9f)
             {
-                id = 1;
+                id = Block.Grass.Id;
             }
             else if (clusterValue > 0.8f)
             {
-                id = 3;
+                id = Block.Sand.Id;
             }
 
             mountainValue = Mathf.Sqrt(mountainValue);
@@ -85,12 +85,12 @@ namespace Assets.Scripts
             mountainValue += heightBase;
             mountainValue += (blobValue*10) - 5f;
 
-            return mountainValue >= position.y ? id : (byte) 0;
+            return mountainValue >= position.y ? id : 0;
         }
 
         private void CalculateMapFromScratch()
         {
-            _map = new byte[Width, Height, Width];
+            _map = new int[Width, Height, Width];
 
             Random.seed = World.CurrentWorld.Seed;
 
@@ -100,7 +100,7 @@ namespace Assets.Scripts
                 {
                     for (var z = 0; z < Width; z++)
                     {
-                        _map[x, y, z] = GetTheoreticalByte(new Vector3(x, y, z) + transform.position);
+                        _map[x, y, z] = GetTheoreticalId(new Vector3(x, y, z) + transform.position);
                     }
                 }
             }
@@ -237,7 +237,7 @@ namespace Assets.Scripts
         }
 
         private void BuildFace(
-            byte id, 
+            int id, 
             Vector3 corner, 
             Vector3 up, 
             Vector3 right, 
@@ -254,7 +254,7 @@ namespace Assets.Scripts
             vertices.Add(corner + right);
 
             var uvWidth = _resourceManager.BlockUvSize;
-            var uvCorner = _resourceManager.BlockUvPositions[id.ToString()];
+            var uvCorner = _resourceManager.BlockUvPositions[Block.Blocks[id].GetUvName(Side.Up)];
 
             uvs.Add(uvCorner);
             uvs.Add(new Vector2(uvCorner.x, uvCorner.y + uvWidth.y));
@@ -298,7 +298,7 @@ namespace Assets.Scripts
             }
         }
 
-        public byte GetId(int x, int y, int z)
+        public int GetId(int x, int y, int z)
         {
 
             if ((y < 0) || (y >= Height))
@@ -316,14 +316,14 @@ namespace Assets.Scripts
                 }
                 if (chunk == null)
                 {
-                    return GetTheoreticalByte(worldPos);
+                    return GetTheoreticalId(worldPos);
                 }
                 return chunk.GetId(worldPos);
             }
             return _map[x, y, z];
         }
 
-        public byte GetId(Vector3 worldPosition)
+        public int GetId(Vector3 worldPosition)
         {
             worldPosition -= transform.position;
             var x = Mathf.FloorToInt(worldPosition.x);
@@ -352,14 +352,14 @@ namespace Assets.Scripts
             return null;
         }
 
-        public bool SetId(byte id, Vector3 worldPosition)
+        public bool SetId(int id, Vector3 worldPosition)
         {
             worldPosition -= transform.position;
             return SetId(id, Mathf.FloorToInt(worldPosition.x), Mathf.FloorToInt(worldPosition.y),
                 Mathf.FloorToInt(worldPosition.z));
         }
 
-        public bool SetId(byte id, int x, int y, int z)
+        public bool SetId(int id, int x, int y, int z)
         {
             if ((x < 0) || (y < 0) || (z < 0) || (x >= Width) || (y >= Height || (z >= Width)))
             {
