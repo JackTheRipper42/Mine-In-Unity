@@ -14,7 +14,7 @@ namespace Assets.Scripts.Blocks
         {
         }
 
-        public override string GetUvName(int x, int y, int z, World world, Side side)
+        public override string GetUvName(int x, int y, int z, IWorld world, Side side)
         {
             switch (side)
             {
@@ -35,12 +35,12 @@ namespace Assets.Scripts.Blocks
             }
         }
 
-        public override bool IsTransparent(int x, int y, int z, World world, Side side)
+        public override bool IsTransparent(int x, int y, int z, IWorld world, Side side)
         {
             return false;
         }
 
-        public override void OnRandomTick(int x, int y, int z, World world)
+        public override void OnRandomTick(int x, int y, int z, IWorld world)
         {
             if (world.GetBlockId(x, y + 1, z) != Air.Id)
             {
@@ -51,7 +51,7 @@ namespace Assets.Scripts.Blocks
             }
         }
 
-        private bool IsRightDirty(int x, int y, int z, World world)
+        private bool IsRightDirty(int x, int y, int z, IWorld world)
         {
             if (Blocks[world.GetBlockId(x + 1, y - 1, z)].Id != Id)
             {
@@ -68,7 +68,7 @@ namespace Assets.Scripts.Blocks
             return false;
         }
 
-        private bool IsLeftDirty(int x, int y, int z, World world)
+        private bool IsLeftDirty(int x, int y, int z, IWorld world)
         {
             if (Blocks[world.GetBlockId(x - 1, y - 1, z)].Id != Id)
             {
@@ -85,7 +85,7 @@ namespace Assets.Scripts.Blocks
             return false;
         }
 
-        private bool IsFrontDirty(int x, int y, int z, World world)
+        private bool IsFrontDirty(int x, int y, int z, IWorld world)
         {
             if (Blocks[world.GetBlockId(x, y - 1, z + 1)].Id != Id)
             {
@@ -102,7 +102,7 @@ namespace Assets.Scripts.Blocks
             return false;
         }
 
-        private bool IsBackDirty(int x, int y, int z, World world)
+        private bool IsBackDirty(int x, int y, int z, IWorld world)
         {
             if (Blocks[world.GetBlockId(x, y - 1, z - 1)].Id != Id)
             {

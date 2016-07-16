@@ -37,11 +37,11 @@ namespace Assets.Scripts
             get { return _requiresRandomTickUpdate; }
         }
 
-        public abstract string GetUvName(int x, int y, int z, World world, Side side);
+        public abstract string GetUvName(int x, int y, int z, IWorld world, Side side);
 
-        public abstract bool IsTransparent(int x, int y, int z, World world, Side side);
+        public abstract bool IsTransparent(int x, int y, int z, IWorld world, Side side);
 
-        public virtual void OnRandomTick(int x, int y, int z, World world)
+        public virtual void OnRandomTick(int x, int y, int z, IWorld world)
         {
         }
     }

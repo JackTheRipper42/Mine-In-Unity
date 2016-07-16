@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace Assets.Scripts
 {
-    public class World : MonoBehaviour
+    public class World : MonoBehaviour, IWorld
     {
         public int Seed;
         public float ViewRange = 30;

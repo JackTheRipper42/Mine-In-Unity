@@ -12,12 +12,12 @@
             _transparent = transparent;
         }
 
-        public override string GetUvName(int x, int y, int z, World world, Side side)
+        public override string GetUvName(int x, int y, int z, IWorld world, Side side)
         {
             return _uvName;
         }
 
-        public override bool IsTransparent(int x, int y, int z, World world, Side side)
+        public override bool IsTransparent(int x, int y, int z, IWorld world, Side side)
         {
             return _transparent;
         }
