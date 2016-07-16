@@ -15,7 +15,7 @@ namespace Assets.Scripts
 
         private ResourceManager _resourceManager;
 
-        private int[,,] _map;
+        private int[] _map;
         private Mesh _visualMesh;
         private MeshCollider _meshCollider;
         private MeshFilter _meshFilter;
@@ -83,7 +83,7 @@ namespace Assets.Scripts
         }
 
         protected virtual void Update()
-        {
+        {           
             if (IsDirty)
             {
                 CreateVisualMesh();
@@ -93,7 +93,7 @@ namespace Assets.Scripts
 
         private void CalculateMapFromScratch()
         {
-            _map = new int[Width, Height, Width];
+            _map = new int[Width* Height* Width];
 
             Random.seed = _world.Seed;
 
@@ -103,7 +103,7 @@ namespace Assets.Scripts
                 {
                     for (var z = 0; z < Width; z++)
                     {
-                        _map[x, y, z] = WorldGenerator.GetTheoreticalId(
+                        _map[GetIndex(x, y, z)] = WorldGenerator.GetTheoreticalId(
                             new Vector3(x, y, z) + transform.position,
                             _world);
                     }
@@ -124,12 +124,12 @@ namespace Assets.Scripts
                 {
                     for (var z = 0; z < Width; z++)
                     {
-                        if (_map[x, y, z] == 0)
+                        if (_map[GetIndex(x, y, z)] == 0)
                         {
                             continue;
                         }
 
-                        var id = _map[x, y, z];
+                        var id = _map[GetIndex(x, y, z)];
 
                         var worldX = x + Mathf.FloorToInt(transform.position.x);
                         var worldY = y + Mathf.FloorToInt(transform.position.y);
@@ -331,7 +331,7 @@ namespace Assets.Scripts
             }
             else
             {
-                id = _map[x, y, z];
+                id = _map[GetIndex(x, y, z)];
             }
 
             return Block.Blocks[id].IsTransparent(
@@ -357,7 +357,7 @@ namespace Assets.Scripts
                 throw new ArgumentOutOfRangeException("z", z, "The z coordinate is invalid.");
             }
 
-            _map[x, y, z] = id;
+            _map[GetIndex(x, y, z)] = id;
             IsDirty = true;
 
             if (x == 0)
@@ -410,7 +410,7 @@ namespace Assets.Scripts
                 return Block.Air.Id;
             }
 
-            return _map[x, y, z];
+            return _map[GetIndex(x, y, z)];
         }
 
         private void CalculateLocalCoordinates(Vector3 worldPosition, out int x, out int y, out int z)
@@ -432,6 +432,11 @@ namespace Assets.Scripts
             x = Mathf.FloorToInt(worldX - transform.position.x);
             y = Mathf.FloorToInt(worldY - transform.position.y);
             z = Mathf.FloorToInt(worldZ - transform.position.z);
+        }
+
+        private static int GetIndex(int x, int y, int z)
+        {
+            return z + y*Height + x*Height*Width;
         }
     }
 }
