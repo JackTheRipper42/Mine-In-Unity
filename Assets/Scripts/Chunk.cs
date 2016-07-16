@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using Random = UnityEngine.Random;
 
@@ -21,8 +22,14 @@ namespace Assets.Scripts
         private MeshFilter _meshFilter;
         private World _world;
         private Position3 _position;
+        private HashSet<Position3> _randomTickBlocks; 
 
         public bool IsDirty { get; private set; }
+
+        public int TickUpdateBlocks
+        {
+            get { return _randomTickBlocks.Count; }
+        }
 
         public void Initialize(Position3 chunkPosition)
         {
@@ -72,6 +79,28 @@ namespace Assets.Scripts
                 id);
         }
 
+        public void TickUpdate()
+        {
+            foreach (var position in _randomTickBlocks.ToList())
+            {
+                var id = _map[GetIndex(position.X, position.Y, position.Z)];
+                var worldPosition = position + _position;
+                Block.Blocks[id].OnRandomTick(worldPosition.X, worldPosition.Y, worldPosition.Z, _world);
+            }
+        }
+
+        public void EnableRandomTickUpdate(Position3 worldPosition)
+        {
+            var localPosition = worldPosition - _position;
+            _randomTickBlocks.Add(localPosition);
+        }
+
+        public void DisableRandomTickUpdate(Position3 worldPosition)
+        {
+            var localPosition = worldPosition - _position;
+            _randomTickBlocks.Remove(localPosition);
+        }
+
         protected virtual void Update()
         {           
             if (IsDirty)
@@ -84,6 +113,7 @@ namespace Assets.Scripts
         private void CalculateMapFromScratch()
         {
             _map = new int[Width* Height* Width];
+            _randomTickBlocks = new HashSet<Position3>();
 
             Random.seed = _world.Seed;
 
@@ -93,9 +123,14 @@ namespace Assets.Scripts
                 {
                     for (var z = 0; z < Width; z++)
                     {
-                        _map[GetIndex(x, y, z)] = WorldGenerator.GetTheoreticalId(
+                        var id = WorldGenerator.GetTheoreticalId(
                             new Position3(x, y, z) + _position,
                             _world);
+                        _map[GetIndex(x, y, z)] = id;
+                        if (Block.Blocks[id].RequiresRandomTickUpdate)
+                        {
+                            _randomTickBlocks.Add(new Position3(x, y, z));
+                        }
                     }
                 }
             }
@@ -347,7 +382,23 @@ namespace Assets.Scripts
                 throw new ArgumentOutOfRangeException("z", z, "The z coordinate is invalid.");
             }
 
-            _map[GetIndex(x, y, z)] = id;
+            var index = GetIndex(x, y, z);
+            var oldId = _map[index];
+
+            if (oldId == id)
+            {
+                return;
+            }
+
+            var localPosition = new Position3(x, y, z);
+
+            _randomTickBlocks.Remove(localPosition);
+            if (Block.Blocks[id].RequiresRandomTickUpdate)
+            {
+                _randomTickBlocks.Add(localPosition);
+            }
+            _map[index] = id;
+
             IsDirty = true;
 
             if (x == 0)

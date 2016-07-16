@@ -1,4 +1,5 @@
 ﻿using Assets.Scripts.Blocks;
+using System;
 
 namespace Assets.Scripts
 {
@@ -13,10 +14,16 @@ namespace Assets.Scripts
         public static readonly SimpleBlock Water = new SimpleBlock(4, false, "water");
 
         private readonly int _id;
+        private readonly bool _requiresRandomTickUpdate;
 
-        protected Block(int id)
+        protected Block(int id, bool requiresRandomTickUpdate)
         {
             _id = id;
+            _requiresRandomTickUpdate = requiresRandomTickUpdate;
+            if (Blocks[id] != null)
+            {
+                throw new ArgumentException(string.Format("The id {0} is already ised.", id), "id");
+            }
             Blocks[id] = this;
         }
 
@@ -25,8 +32,17 @@ namespace Assets.Scripts
             get { return _id; }
         }
 
+        public bool RequiresRandomTickUpdate
+        {
+            get { return _requiresRandomTickUpdate; }
+        }
+
         public abstract string GetUvName(int x, int y, int z, World world, Side side);
 
         public abstract bool IsTransparent(int x, int y, int z, World world, Side side);
+
+        public virtual void OnRandomTick(int x, int y, int z, World world)
+        {
+        }
     }
 }

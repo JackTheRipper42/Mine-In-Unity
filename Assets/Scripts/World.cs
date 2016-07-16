@@ -24,6 +24,7 @@ namespace Assets.Scripts
             _chunks = new List<Chunk>();
             _chunkCreationQueue = new Queue<Position3>();
             StartCoroutine(ChunkCreator());
+            StartCoroutine(OnTickUpdater());
         }
 
         protected virtual void Update()
@@ -98,6 +99,27 @@ namespace Assets.Scripts
                     CreateChunk(chunkPosition);
                 }
                 yield return new WaitForSeconds(0.01f);
+            }
+        }
+
+        private IEnumerator OnTickUpdater()
+        {
+            while (isActiveAndEnabled)
+            {
+                var freeBlocks = 65000;
+                foreach (var chunk in _chunks.OrderBy(item => Random.value))
+                {
+                    if (Random.Range(0, 10) > 6)
+                    {
+                        freeBlocks -= chunk.TickUpdateBlocks;
+                        if (freeBlocks >= 0)
+                        {
+                            chunk.TickUpdate();
+                        }
+                    }
+                    yield return new WaitForEndOfFrame();
+                }
+                yield return new WaitForSeconds(0.02f);
             }
         }
     }

@@ -1,4 +1,5 @@
 ﻿using System;
+using Random = UnityEngine.Random;
 
 namespace Assets.Scripts.Blocks
 {
@@ -8,7 +9,8 @@ namespace Assets.Scripts.Blocks
         private const string GrassUvName = "grass";
         private const string GrassSideUvName = "grass side";
 
-        public Grass(int id) : base(id)
+        public Grass(int id)
+            : base(id, true)
         {
         }
 
@@ -36,6 +38,17 @@ namespace Assets.Scripts.Blocks
         public override bool IsTransparent(int x, int y, int z, World world, Side side)
         {
             return false;
+        }
+
+        public override void OnRandomTick(int x, int y, int z, World world)
+        {
+            if (world.GetBlockId(x, y + 1, z) != Air.Id)
+            {
+                if (Random.Range(0, 10) > 6)
+                {
+                    world.SetBlockId(x, y, z, Dirt.Id);
+                }
+            }
         }
 
         private bool IsRightDirty(int x, int y, int z, World world)

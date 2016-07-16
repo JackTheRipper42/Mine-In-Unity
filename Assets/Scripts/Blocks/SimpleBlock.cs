@@ -6,7 +6,7 @@
         private readonly bool _transparent;
 
         public SimpleBlock(int id, bool transparent, string uvName) 
-            : base(id)
+            : base(id, false)
         {
             _uvName = uvName;
             _transparent = transparent;

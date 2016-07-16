@@ -16,6 +16,36 @@ namespace Assets.Scripts
             _z = z;
         }
 
+        public static Position3 Down
+        {
+            get { return new Position3(0, -1, 0); }
+        }
+
+        public static Position3 Left
+        {
+            get { return new Position3(-1, 0, 0); }
+        }
+
+        public static Position3 Right
+        {
+            get { return new Position3(1, 0, 0); }
+        }
+
+        public static Position3 Up
+        {
+            get { return new Position3(0, 1, 0); }
+        }
+
+        public static Position3 Front
+        {
+            get { return new Position3(0, 0, 1); }
+        }
+
+        public static Position3 Back
+        {
+            get { return new Position3(0, 0, -1); }
+        }
+
         public int X
         {
             get { return _x; }
