@@ -131,10 +131,18 @@ namespace Assets.Scripts
 
                         var id = _map[x, y, z];
 
+                        var worldX = x + Mathf.FloorToInt(transform.position.x);
+                        var worldY = y + Mathf.FloorToInt(transform.position.y);
+                        var worldZ = z + Mathf.FloorToInt(transform.position.z);
+
                         // Left wall
-                        if (IsTransparent(x - 1, y, z))
+                        if (IsTransparent(x - 1, y, z, Side.Right))
                         {
                             BuildFace(
+                                worldX,
+                                worldY,
+                                worldZ,
+                                Side.Left,
                                 id,
                                 new Vector3(x, y, z),
                                 Vector3.up,
@@ -146,9 +154,13 @@ namespace Assets.Scripts
                         }
 
                         // Right wall
-                        if (IsTransparent(x + 1, y, z))
+                        if (IsTransparent(x + 1, y, z, Side.Left))
                         {
                             BuildFace(
+                                worldX,
+                                worldY,
+                                worldZ,
+                                Side.Right,
                                 id,
                                 new Vector3(x + 1, y, z),
                                 Vector3.up,
@@ -160,9 +172,13 @@ namespace Assets.Scripts
                         }
 
                         // Bottom wall
-                        if (IsTransparent(x, y - 1, z))
+                        if (IsTransparent(x, y - 1, z, Side.Up))
                         {
                             BuildFace(
+                                worldX,
+                                worldY,
+                                worldZ,
+                                Side.Down,
                                 id,
                                 new Vector3(x, y, z),
                                 Vector3.forward,
@@ -174,9 +190,13 @@ namespace Assets.Scripts
                         }
 
                         // Top wall
-                        if (IsTransparent(x, y + 1, z))
+                        if (IsTransparent(x, y + 1, z, Side.Down))
                         {
                             BuildFace(
+                                worldX,
+                                worldY,
+                                worldZ,
+                                Side.Up,
                                 id,
                                 new Vector3(x, y + 1, z),
                                 Vector3.forward,
@@ -188,9 +208,13 @@ namespace Assets.Scripts
                         }
 
                         // Back
-                        if (IsTransparent(x, y, z - 1))
+                        if (IsTransparent(x, y, z - 1, Side.Front))
                         {
                             BuildFace(
+                                worldX,
+                                worldY,
+                                worldZ,
+                                Side.Back,
                                 id,
                                 new Vector3(x, y, z),
                                 Vector3.up,
@@ -202,9 +226,13 @@ namespace Assets.Scripts
                         }
 
                         // Front
-                        if (IsTransparent(x, y, z + 1))
+                        if (IsTransparent(x, y, z + 1, Side.Back))
                         {
                             BuildFace(
+                                worldX,
+                                worldY,
+                                worldZ,
+                                Side.Front,
                                 id,
                                 new Vector3(x, y, z + 1),
                                 Vector3.up,
@@ -231,6 +259,10 @@ namespace Assets.Scripts
         }
 
         private void BuildFace(
+            int x,
+            int y, 
+            int z,
+            Side side,
             int id,
             Vector3 corner,
             Vector3 up,
@@ -248,7 +280,7 @@ namespace Assets.Scripts
             vertices.Add(corner + right);
 
             var uvWidth = _resourceManager.BlockUvSize;
-            var uvCorner = _resourceManager.BlockUvPositions[Block.Blocks[id].GetUvName(Side.Up)];
+            var uvCorner = _resourceManager.BlockUvPositions[Block.Blocks[id].GetUvName(x, y, z, _world, side)];
 
             uvs.Add(uvCorner);
             uvs.Add(new Vector2(uvCorner.x, uvCorner.y + uvWidth.y));
@@ -276,7 +308,7 @@ namespace Assets.Scripts
 
         }
 
-        private bool IsTransparent(int x, int y, int z)
+        private bool IsTransparent(int x, int y, int z, Side side)
         {
             if (y < 0)
             {
@@ -302,7 +334,12 @@ namespace Assets.Scripts
                 id = _map[x, y, z];
             }
 
-            return Block.Blocks[id].IsTransparent(Side.Up);
+            return Block.Blocks[id].IsTransparent(
+                x + Mathf.FloorToInt(transform.position.x),
+                y + Mathf.FloorToInt(transform.position.y),
+                z + Mathf.FloorToInt(transform.position.z),
+                _world,
+                side);
         }
 
         private void SetBlockIdLocal(int x, int y, int z, int id)

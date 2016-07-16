@@ -1,4 +1,4 @@
-﻿namespace Assets.Scripts
+﻿namespace Assets.Scripts.Blocks
 {
     public class SimpleBlock : Block
     {
@@ -12,12 +12,12 @@
             _transparent = transparent;
         }
 
-        public override string GetUvName(Side side)
+        public override string GetUvName(int x, int y, int z, World world, Side side)
         {
             return _uvName;
         }
 
-        public override bool IsTransparent(Side side)
+        public override bool IsTransparent(int x, int y, int z, World world, Side side)
         {
             return _transparent;
         }
