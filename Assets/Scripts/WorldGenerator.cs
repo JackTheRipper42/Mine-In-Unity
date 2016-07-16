@@ -4,7 +4,7 @@ namespace Assets.Scripts
 {
     public static class WorldGenerator
     {
-        public static int GetTheoreticalId(Vector3 worldPosition, World world)
+        public static int GetTheoreticalId(Position3 worldPosition, World world)
         {
             Random.seed = world.Seed;
 
@@ -14,7 +14,7 @@ namespace Assets.Scripts
             return GetTheoreticalId(worldPosition, grain0Offset, grain1Offset);
         }
 
-        private static int GetTheoreticalId(Vector3 worldPosition, Vector3 offset0, Vector3 offset1)
+        private static int GetTheoreticalId(Position3 worldPosition, Vector3 offset0, Vector3 offset1)
         {
             const float heightBase = 10f;
             const float maxHeight = Chunk.Height - 10f;
@@ -43,14 +43,14 @@ namespace Assets.Scripts
             mountainValue += heightBase;
             mountainValue += (blobValue * 10) - 5f;
 
-            return mountainValue >= worldPosition.y ? id : 0;
+            return mountainValue >= worldPosition.Y ? id : 0;
         }
 
-        private static float CalculateNoiseValue(Vector3 pos, Vector3 offset, float scale)
+        private static float CalculateNoiseValue(Position3 pos, Vector3 offset, float scale)
         {
-            var noiseX = Mathf.Abs((pos.x + offset.x) * scale);
-            var noiseY = Mathf.Abs((pos.y + offset.y) * scale);
-            var noiseZ = Mathf.Abs((pos.z + offset.z) * scale);
+            var noiseX = Mathf.Abs((pos.X + offset.x) * scale);
+            var noiseY = Mathf.Abs((pos.Y + offset.y) * scale);
+            var noiseZ = Mathf.Abs((pos.Z + offset.z) * scale);
 
             return Mathf.Max(0, Noise.Generate(noiseX, noiseY, noiseZ));
         }

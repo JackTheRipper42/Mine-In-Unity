@@ -12,7 +12,7 @@ namespace Assets.Scripts
         public GameObject ChunkPrefab;
 
         private List<Chunk> _chunks;
-        private Queue<Position2> _chunkCreationQueue; 
+        private Queue<Position3> _chunkCreationQueue; 
 
         protected virtual void Awake()
         {
@@ -22,7 +22,7 @@ namespace Assets.Scripts
                 Seed = Random.Range(0, int.MaxValue);
             }
             _chunks = new List<Chunk>();
-            _chunkCreationQueue = new Queue<Position2>();
+            _chunkCreationQueue = new Queue<Position3>();
             StartCoroutine(ChunkCreator());
         }
 
@@ -32,10 +32,11 @@ namespace Assets.Scripts
             {
                 for (var z = transform.position.z - ViewRange; z < transform.position.z + ViewRange; z += Chunk.Width)
                 {
-                    var chunkPosition = new Position2(
+                    var chunkPosition = new Position3(
                         Mathf.FloorToInt(x/Chunk.Width)*Chunk.Width,
+                        0,
                         Mathf.FloorToInt(z/Chunk.Width)*Chunk.Width);
-                    var chunk = FindChunk(new Vector3(chunkPosition.X, 0, chunkPosition.Z));
+                    var chunk = FindChunk(chunkPosition);
                     if (chunk == null && !_chunkCreationQueue.Contains(chunkPosition))
                     {
                         _chunkCreationQueue.Enqueue(chunkPosition);
@@ -44,16 +45,16 @@ namespace Assets.Scripts
             }
         }
 
-        public Chunk FindChunk(Vector3 position)
+        public Chunk FindChunk(Position3 position)
         {
             for (var a = 0; a < _chunks.Count; a++)
             {
                 var chunkPosition = _chunks[a].transform.position;
 
-                if ((position.x < chunkPosition.x) ||
-                    (position.z < chunkPosition.z) ||
-                    (position.x >= chunkPosition.x + Chunk.Width) ||
-                    (position.z >= chunkPosition.z + Chunk.Width))
+                if ((position.X < chunkPosition.x) ||
+                    (position.Z < chunkPosition.z) ||
+                    (position.X >= chunkPosition.x + Chunk.Width) ||
+                    (position.Z >= chunkPosition.z + Chunk.Width))
                 {
                     continue;
                 }
@@ -64,27 +65,25 @@ namespace Assets.Scripts
 
         public void SetBlockId(int x, int y, int z, int id)
         {
-            var position = new Vector3(x, y, z);
-            var chunk = FindChunk(position) ?? CreateChunk(position);
+            var position = new Position3(x, y, z);
+            var chunk = FindChunk(position) ?? CreateChunk(new Position3(x, 0, z));
             chunk.SetBlockIdGlobal(x, y, z, id);
         }
 
         public int GetBlockId(int x, int y, int z)
         {
-            var position = new Vector3(x, y, z);
+            var position = new Position3(x, y, z);
             var chunk = FindChunk(position);
             return chunk != null
                 ? chunk.GetBlockIdGlobal(x, y, z)
-                : WorldGenerator.GetTheoreticalId(new Vector3(x, y, z), this);
+                : WorldGenerator.GetTheoreticalId(position, this);
         }
 
-        private Chunk CreateChunk(Vector3 position)
+        private Chunk CreateChunk(Position3 position)
         {
             var obj = Instantiate(ChunkPrefab);
-            obj.transform.position = position;
-            obj.transform.rotation = Quaternion.identity;
             var chunk = obj.GetComponent<Chunk>();
-            chunk.Initialize();
+            chunk.Initialize(position);
             _chunks.Add(chunk);
             return chunk;
         }
@@ -96,7 +95,7 @@ namespace Assets.Scripts
                 if (_chunkCreationQueue.Any())
                 {
                     var chunkPosition = _chunkCreationQueue.Dequeue();
-                    CreateChunk(new Vector3(chunkPosition.X, 0, chunkPosition.Z));
+                    CreateChunk(chunkPosition);
                 }
                 yield return new WaitForSeconds(0.01f);
             }

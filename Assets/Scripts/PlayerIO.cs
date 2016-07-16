@@ -40,7 +40,7 @@ namespace Assets.Scripts
                     {
                         var worldPosition = hit.point;
                         worldPosition -= hit.normal/4;
-                        chunk.SetBlockIdGlobal(worldPosition, Block.Air.Id);
+                        chunk.SetBlockIdGlobal(Position3.From(worldPosition), Block.Air.Id);
                     }
 
                     if (Input.GetMouseButtonDown(1))
@@ -50,7 +50,7 @@ namespace Assets.Scripts
                         {
                             worldPosition += hit.normal/4;
 
-                            chunk.SetBlockIdGlobal(worldPosition, SelectedInventory);
+                            chunk.SetBlockIdGlobal(Position3.From(worldPosition), SelectedInventory);
                         }
                     }
 
@@ -58,7 +58,7 @@ namespace Assets.Scripts
                     {
                         var worldPosition = hit.point;
                         worldPosition -= hit.normal/4;
-                        SelectedInventory = chunk.GetBlockIdGlobal(worldPosition);
+                        SelectedInventory = chunk.GetBlockIdGlobal(Position3.From(worldPosition));
                     }
                 }
             }
