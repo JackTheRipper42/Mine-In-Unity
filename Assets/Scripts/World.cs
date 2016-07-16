@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System.Collections.Generic;
+using UnityEngine;
 
 namespace Assets.Scripts
 {
@@ -6,7 +7,9 @@ namespace Assets.Scripts
     {
         public int Seed;
         public float ViewRange = 30;
-        public Chunk ChunkFab;
+        public GameObject ChunkPrefab;
+
+        private List<Chunk> _chunks;
 
         protected virtual void Awake()
         {
@@ -15,6 +18,7 @@ namespace Assets.Scripts
             {
                 Seed = Random.Range(0, int.MaxValue);
             }
+            _chunks = new List<Chunk>();
         }
 
         protected virtual void Update()
@@ -28,13 +32,36 @@ namespace Assets.Scripts
                     position.x = Mathf.Floor(position.x/Chunk.Width)*Chunk.Width;
                     position.z = Mathf.Floor(position.z/Chunk.Width)*Chunk.Width;
 
-                    var chunk = Chunk.FindChunk(position);
+                    var chunk = FindChunk(position);
                     if (chunk == null)
                     {
-                        Instantiate(ChunkFab, position, Quaternion.identity);
+                        var obj = Instantiate(ChunkPrefab);
+                        obj.transform.position = position;
+                        obj.transform.rotation = Quaternion.identity;
+                        chunk = obj.GetComponent<Chunk>();
+                        chunk.Initialize();
+                        _chunks.Add(chunk);
                     }
                 }
             }
+        }
+
+        public Chunk FindChunk(Vector3 position)
+        {
+            for (var a = 0; a < _chunks.Count; a++)
+            {
+                var chunkPosition = _chunks[a].transform.position;
+
+                if ((position.x < chunkPosition.x) ||
+                    (position.z < chunkPosition.z) ||
+                    (position.x >= chunkPosition.x + Chunk.Width) ||
+                    (position.z >= chunkPosition.z + Chunk.Width))
+                {
+                    continue;
+                }
+                return _chunks[a];
+            }
+            return null;
         }
     }
 }

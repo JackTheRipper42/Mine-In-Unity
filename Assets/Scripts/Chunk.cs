@@ -13,8 +13,6 @@ namespace Assets.Scripts
         public const int Width = 20;
         public const int Height = 20;
 
-        public static List<Chunk> Chunks = new List<Chunk>();
-
         private ResourceManager _resourceManager;
 
         private int[,,] _map;
@@ -22,11 +20,10 @@ namespace Assets.Scripts
         private MeshCollider _meshCollider;
         private MeshFilter _meshFilter;
         private World _world;
-        
-        protected virtual void Start()
+
+        public void Initialize()
         {
             _world = FindObjectOfType<World>();
-            Chunks.Add(this);
 
             _meshCollider = GetComponent<MeshCollider>();
             _meshFilter = GetComponent<MeshFilter>();
@@ -36,7 +33,7 @@ namespace Assets.Scripts
             meshRenderer.material = _resourceManager.ChunkMaterial;
 
             CalculateMapFromScratch();
-            StartCoroutine(CreateVisualMesh());
+            CreateVisualMesh();
         }
 
         private void CalculateMapFromScratch()
@@ -58,14 +55,14 @@ namespace Assets.Scripts
                 }
             }
         }
-      
-        private IEnumerator CreateVisualMesh()
+
+        private void CreateVisualMesh()
         {
             _visualMesh = new Mesh();
             var vertices = new List<Vector3>();
             var uvs = new List<Vector2>();
             var triangles = new List<int>();
-            
+
             for (var x = 0; x < Width; x++)
             {
                 for (var y = 0; y < Height; y++)
@@ -83,12 +80,12 @@ namespace Assets.Scripts
                         if (IsTransparent(x - 1, y, z))
                         {
                             BuildFace(
-                                id, 
-                                new Vector3(x, y, z), 
-                                Vector3.up, 
-                                Vector3.forward, 
-                                false, 
-                                vertices, 
+                                id,
+                                new Vector3(x, y, z),
+                                Vector3.up,
+                                Vector3.forward,
+                                false,
+                                vertices,
                                 uvs,
                                 triangles);
                         }
@@ -97,12 +94,12 @@ namespace Assets.Scripts
                         if (IsTransparent(x + 1, y, z))
                         {
                             BuildFace(
-                                id, 
-                                new Vector3(x + 1, y, z), 
-                                Vector3.up, 
-                                Vector3.forward, 
-                                true, 
-                                vertices, 
+                                id,
+                                new Vector3(x + 1, y, z),
+                                Vector3.up,
+                                Vector3.forward,
+                                true,
+                                vertices,
                                 uvs,
                                 triangles);
                         }
@@ -111,12 +108,12 @@ namespace Assets.Scripts
                         if (IsTransparent(x, y - 1, z))
                         {
                             BuildFace(
-                                id, 
-                                new Vector3(x, y, z), 
-                                Vector3.forward, 
-                                Vector3.right, 
-                                false, 
-                                vertices, 
+                                id,
+                                new Vector3(x, y, z),
+                                Vector3.forward,
+                                Vector3.right,
+                                false,
+                                vertices,
                                 uvs,
                                 triangles);
                         }
@@ -139,13 +136,13 @@ namespace Assets.Scripts
                         if (IsTransparent(x, y, z - 1))
                         {
                             BuildFace(
-                                id, 
-                                new Vector3(x, y, z), 
-                                Vector3.up, 
-                                Vector3.right, 
-                                true, 
-                                vertices, 
-                                uvs, 
+                                id,
+                                new Vector3(x, y, z),
+                                Vector3.up,
+                                Vector3.right,
+                                true,
+                                vertices,
+                                uvs,
                                 triangles);
                         }
 
@@ -153,12 +150,12 @@ namespace Assets.Scripts
                         if (IsTransparent(x, y, z + 1))
                         {
                             BuildFace(
-                                id, 
-                                new Vector3(x, y, z + 1), 
-                                Vector3.up, 
-                                Vector3.right, 
-                                false, 
-                                vertices, 
+                                id,
+                                new Vector3(x, y, z + 1),
+                                Vector3.up,
+                                Vector3.right,
+                                false,
+                                vertices,
                                 uvs,
                                 triangles);
                         }
@@ -176,18 +173,16 @@ namespace Assets.Scripts
 
             _meshCollider.sharedMesh = null;
             _meshCollider.sharedMesh = _visualMesh;
-
-            yield return 0;
         }
 
         private void BuildFace(
-            int id, 
-            Vector3 corner, 
-            Vector3 up, 
-            Vector3 right, 
+            int id,
+            Vector3 corner,
+            Vector3 up,
+            Vector3 right,
             bool reversed,
-            ICollection<Vector3> vertices, 
-            ICollection<Vector2> uvs, 
+            ICollection<Vector3> vertices,
+            ICollection<Vector2> uvs,
             ICollection<int> triangles)
         {
             var index = vertices.Count;
@@ -247,7 +242,7 @@ namespace Assets.Scripts
             if ((x < 0) || (z < 0) || (x >= Width) || (z >= Width))
             {
                 var worldPosition = new Vector3(x, y, z) + transform.position;
-                var chunk = FindChunk(worldPosition);
+                var chunk = _world.FindChunk(worldPosition);
                 if (chunk == this)
                 {
                     return 0;
@@ -268,26 +263,6 @@ namespace Assets.Scripts
             var y = Mathf.FloorToInt(worldPosition.y);
             var z = Mathf.FloorToInt(worldPosition.z);
             return GetId(x, y, z);
-        }
-
-        public static Chunk FindChunk(Vector3 position)
-        {
-
-            for (var a = 0; a < Chunks.Count; a++)
-            {
-                var chunkPosition = Chunks[a].transform.position;
-
-                if ((position.x < chunkPosition.x) ||
-                    (position.z < chunkPosition.z) ||
-                    (position.x >= chunkPosition.x + Width) ||
-                    (position.z >= chunkPosition.z + Width))
-                {
-                    continue;
-                }
-                return Chunks[a];
-
-            }
-            return null;
         }
 
         public bool SetId(int id, Vector3 worldPosition)
@@ -311,38 +286,38 @@ namespace Assets.Scripts
                 return false;
             }
             _map[x, y, z] = id;
-            StartCoroutine(CreateVisualMesh());
+            CreateVisualMesh();
 
             if (x == 0)
             {
-                var chunk = FindChunk(new Vector3(x - 2, y, z) + transform.position);
+                var chunk = _world.FindChunk(new Vector3(x - 2, y, z) + transform.position);
                 if (chunk != null)
                 {
-                    StartCoroutine(chunk.CreateVisualMesh());
+                    chunk.CreateVisualMesh();
                 }
             }
             if (x == Width - 1)
             {
-                var chunk = FindChunk(new Vector3(x + 2, y, z) + transform.position);
+                var chunk = _world.FindChunk(new Vector3(x + 2, y, z) + transform.position);
                 if (chunk != null)
                 {
-                    StartCoroutine(chunk.CreateVisualMesh());
+                    chunk.CreateVisualMesh();
                 }
             }
             if (z == 0)
             {
-                var chunk = FindChunk(new Vector3(x, y, z - 2) + transform.position);
+                var chunk = _world.FindChunk(new Vector3(x, y, z - 2) + transform.position);
                 if (chunk != null)
                 {
-                    StartCoroutine(chunk.CreateVisualMesh());
+                    chunk.CreateVisualMesh();
                 }
             }
             if (z == Width - 1)
             {
-                var chunk = FindChunk(new Vector3(x, y, z + 2) + transform.position);
+                var chunk = _world.FindChunk(new Vector3(x, y, z + 2) + transform.position);
                 if (chunk != null)
                 {
-                    StartCoroutine(chunk.CreateVisualMesh());
+                    chunk.CreateVisualMesh();
                 }
             }
             return true;
