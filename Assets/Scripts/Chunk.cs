@@ -11,19 +11,12 @@ namespace Assets.Scripts
     [RequireComponent(typeof(MeshFilter))]
     public class Chunk : MonoBehaviour
     {
+        public const int Width = 20;
+        public const int Height = 20;
+
         public static List<Chunk> Chunks = new List<Chunk>();
 
         private ResourceManager _resourceManager;
-
-        private static int Width
-        {
-            get { return World.CurrentWorld.ChunkWidth; }
-        }
-
-        private static int Height
-        {
-            get { return World.CurrentWorld.ChunkHeight; }
-        }
 
         private int[,,] _map;
         private Mesh _visualMesh;
@@ -93,7 +86,7 @@ namespace Assets.Scripts
 
             Random.seed = World.CurrentWorld.Seed;
 
-            for (var x = 0; x < World.CurrentWorld.ChunkWidth; x++)
+            for (var x = 0; x < Width; x++)
             {
                 for (var y = 0; y < Height; y++)
                 {
