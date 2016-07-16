@@ -38,6 +38,28 @@ namespace Assets.Scripts
             IsDirty = true;
         }
 
+        public int GetBlockIdGlobal(Vector3 worldPosition)
+        {
+            int x;
+            int y;
+            int z;
+
+            CalculateLocalCoordinates(worldPosition, out x, out y, out z);
+
+            return GetBlockIdLocal(x, y, z);
+        }
+
+        public void SetBlockIdGlobal(Vector3 worldPosition, int id)
+        {
+            int x;
+            int y;
+            int z;
+
+            CalculateLocalCoordinates(worldPosition, out x, out y, out z);
+
+            SetBlockIdLocal(x, y, z, id);
+        }
+
         protected virtual void Update()
         {
             if (IsDirty)
@@ -238,64 +260,44 @@ namespace Assets.Scripts
             {
                 return false;
             }
-            var id = GetId(x, y, z);
-            return Block.Blocks[id].IsTransparent(Side.Up);
-        }
-
-        private int GetId(int x, int y, int z)
-        {
-
-            if ((y < 0) || (y >= Height))
+            if (y >= Height)
             {
-                return 0;
+                return true;
             }
+
+            int id;
 
             if ((x < 0) || (z < 0) || (x >= Width) || (z >= Width))
             {
                 var worldPosition = new Vector3(x, y, z) + transform.position;
                 var chunk = _world.FindChunk(worldPosition);
-                if (chunk == this)
-                {
-                    return 0;
-                }
-                if (chunk == null)
-                {
-                    return WorldGenerator.GetTheoreticalId(worldPosition, _world);
-                }
-                return chunk.GetId(worldPosition);
+                id = chunk == null
+                    ? WorldGenerator.GetTheoreticalId(worldPosition, _world)
+                    : chunk.GetBlockIdGlobal(worldPosition);
             }
-            return _map[x, y, z];
-        }
-
-        private int GetId(Vector3 worldPosition)
-        {
-            worldPosition -= transform.position;
-            var x = Mathf.FloorToInt(worldPosition.x);
-            var y = Mathf.FloorToInt(worldPosition.y);
-            var z = Mathf.FloorToInt(worldPosition.z);
-            return GetId(x, y, z);
-        }
-
-        public bool SetId(int id, Vector3 worldPosition)
-        {
-            worldPosition -= transform.position;
-            return SetId(
-                id,
-                Mathf.FloorToInt(worldPosition.x),
-                Mathf.FloorToInt(worldPosition.y),
-                Mathf.FloorToInt(worldPosition.z));
-        }
-
-        public bool SetId(int id, int x, int y, int z)
-        {
-            if ((x < 0) || (y < 0) || (z < 0) || (x >= Width) || (y >= Height || (z >= Width)))
+            else
             {
-                return false;
+                id = _map[x, y, z];
             }
-            if (_map[x, y, z] == id)
+
+            return Block.Blocks[id].IsTransparent(Side.Up);
+        }
+
+        private void SetBlockIdLocal(int x, int y, int z, int id)
+        {
+            if (x < 0 || x >= Width)
             {
-                return false;
+                throw new ArgumentOutOfRangeException("x", x, "The x coordinate is invalid.");
             }
+            if (y < 0 || y >= Height)
+            {
+                throw new ArgumentOutOfRangeException("y", y, "The y coordinate is invalid.");
+            }
+            if (z < 0 || z >= Width)
+            {
+                throw new ArgumentOutOfRangeException("z", z, "The z coordinate is invalid.");
+            }
+
             _map[x, y, z] = id;
             IsDirty = true;
 
@@ -331,17 +333,6 @@ namespace Assets.Scripts
                     chunk.IsDirty = true;
                 }
             }
-            return true;
-        }
-
-        public int GetBlockIdGlobal(Vector3 worldPosition)
-        {
-            var localPosition = worldPosition - transform.position;
-            var x = Mathf.FloorToInt(localPosition.x);
-            var y = Mathf.FloorToInt(localPosition.y);
-            var z = Mathf.FloorToInt(localPosition.z);
-
-            return GetBlockIdLocal(x, y, z);
         }
 
         private int GetBlockIdLocal(int x, int y, int z)
@@ -361,6 +352,14 @@ namespace Assets.Scripts
             }
 
             return _map[x, y, z];
+        }
+
+        private void CalculateLocalCoordinates(Vector3 worldPosition, out int x, out int y, out int z)
+        {
+            var localPosition = worldPosition - transform.position;
+            x = Mathf.FloorToInt(localPosition.x);
+            y = Mathf.FloorToInt(localPosition.y);
+            z = Mathf.FloorToInt(localPosition.z);
         }
     }
 }

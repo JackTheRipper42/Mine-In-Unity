@@ -38,19 +38,19 @@ namespace Assets.Scripts
 
                     if (Input.GetMouseButtonDown(0))
                     {
-                        var p = hit.point;
-                        p -= hit.normal/4;
-                        chunk.SetId(0, p);
+                        var worldPosition = hit.point;
+                        worldPosition -= hit.normal/4;
+                        chunk.SetBlockIdGlobal(worldPosition, Block.Air.Id);
                     }
 
                     if (Input.GetMouseButtonDown(1))
                     {
-                        var p = hit.point;
+                        var worldPosition = hit.point;
                         if (SelectedInventory != 0)
                         {
-                            p += hit.normal/4;
+                            worldPosition += hit.normal/4;
 
-                            chunk.SetId(SelectedInventory, p);
+                            chunk.SetBlockIdGlobal(worldPosition, SelectedInventory);
                         }
                     }
 
