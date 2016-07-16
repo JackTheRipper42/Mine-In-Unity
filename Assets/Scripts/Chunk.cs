@@ -1,5 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 using Random = UnityEngine.Random;
 
@@ -21,6 +20,8 @@ namespace Assets.Scripts
         private MeshFilter _meshFilter;
         private World _world;
 
+        public bool IsDirty { get; private set; }
+
         public void Initialize()
         {
             _world = FindObjectOfType<World>();
@@ -33,7 +34,16 @@ namespace Assets.Scripts
             meshRenderer.material = _resourceManager.ChunkMaterial;
 
             CalculateMapFromScratch();
-            CreateVisualMesh();
+            IsDirty = true;
+        }
+
+        protected virtual void Update()
+        {
+            if (IsDirty)
+            {
+                CreateVisualMesh();
+                IsDirty = false;
+            }
         }
 
         private void CalculateMapFromScratch()
@@ -286,14 +296,14 @@ namespace Assets.Scripts
                 return false;
             }
             _map[x, y, z] = id;
-            CreateVisualMesh();
+            IsDirty = true;
 
             if (x == 0)
             {
                 var chunk = _world.FindChunk(new Vector3(x - 2, y, z) + transform.position);
                 if (chunk != null)
                 {
-                    chunk.CreateVisualMesh();
+                    chunk.IsDirty = true;
                 }
             }
             if (x == Width - 1)
@@ -301,7 +311,7 @@ namespace Assets.Scripts
                 var chunk = _world.FindChunk(new Vector3(x + 2, y, z) + transform.position);
                 if (chunk != null)
                 {
-                    chunk.CreateVisualMesh();
+                    chunk.IsDirty = true;
                 }
             }
             if (z == 0)
@@ -309,7 +319,7 @@ namespace Assets.Scripts
                 var chunk = _world.FindChunk(new Vector3(x, y, z - 2) + transform.position);
                 if (chunk != null)
                 {
-                    chunk.CreateVisualMesh();
+                    chunk.IsDirty = true;
                 }
             }
             if (z == Width - 1)
@@ -317,7 +327,7 @@ namespace Assets.Scripts
                 var chunk = _world.FindChunk(new Vector3(x, y, z + 2) + transform.position);
                 if (chunk != null)
                 {
-                    chunk.CreateVisualMesh();
+                    chunk.IsDirty = true;
                 }
             }
             return true;
