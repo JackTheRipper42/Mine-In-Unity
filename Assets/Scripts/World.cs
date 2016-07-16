@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 namespace Assets.Scripts
@@ -10,6 +12,7 @@ namespace Assets.Scripts
         public GameObject ChunkPrefab;
 
         private List<Chunk> _chunks;
+        private Queue<Position2> _chunkCreationQueue; 
 
         protected virtual void Awake()
         {
@@ -19,6 +22,8 @@ namespace Assets.Scripts
                 Seed = Random.Range(0, int.MaxValue);
             }
             _chunks = new List<Chunk>();
+            _chunkCreationQueue = new Queue<Position2>();
+            StartCoroutine(ChunkCreator());
         }
 
         protected virtual void Update()
@@ -27,15 +32,13 @@ namespace Assets.Scripts
             {
                 for (var z = transform.position.z - ViewRange; z < transform.position.z + ViewRange; z += Chunk.Width)
                 {
-
-                    var position = new Vector3(x, 0, z);
-                    position.x = Mathf.Floor(position.x/Chunk.Width)*Chunk.Width;
-                    position.z = Mathf.Floor(position.z/Chunk.Width)*Chunk.Width;
-
-                    var chunk = FindChunk(position);
-                    if (chunk == null)
+                    var chunkPosition = new Position2(
+                        Mathf.FloorToInt(x/Chunk.Width)*Chunk.Width,
+                        Mathf.FloorToInt(z/Chunk.Width)*Chunk.Width);
+                    var chunk = FindChunk(new Vector3(chunkPosition.X, 0, chunkPosition.Z));
+                    if (chunk == null && !_chunkCreationQueue.Contains(chunkPosition))
                     {
-                        CreateChunk(position);
+                        _chunkCreationQueue.Enqueue(chunkPosition);
                     }
                 }
             }
@@ -84,6 +87,19 @@ namespace Assets.Scripts
             chunk.Initialize();
             _chunks.Add(chunk);
             return chunk;
+        }
+
+        private IEnumerator ChunkCreator()
+        {
+            while (isActiveAndEnabled)
+            {
+                if (_chunkCreationQueue.Any())
+                {
+                    var chunkPosition = _chunkCreationQueue.Dequeue();
+                    CreateChunk(new Vector3(chunkPosition.X, 0, chunkPosition.Z));
+                }
+                yield return new WaitForSeconds(0.01f);
+            }
         }
     }
 }
