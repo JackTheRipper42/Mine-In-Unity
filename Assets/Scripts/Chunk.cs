@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using Random = UnityEngine.Random;
@@ -38,48 +37,6 @@ namespace Assets.Scripts
             StartCoroutine(CreateVisualMesh());
         }
 
-        private static int GetTheoreticalId(Vector3 position)
-        {
-            Random.seed = World.CurrentWorld.Seed;
-
-            var grain0Offset = new Vector3(Random.value*10000, Random.value*10000, Random.value*10000);
-            var grain1Offset = new Vector3(Random.value*10000, Random.value*10000, Random.value*10000);
-
-            return GetTheoreticalId(position, grain0Offset, grain1Offset);
-        }
-
-        private static int GetTheoreticalId(Vector3 position, Vector3 offset0, Vector3 offset1)
-        {
-            const float heightBase = 10f;
-            var maxHeight = Height - 10f;
-            var heightSwing = maxHeight - heightBase;
-
-            int id = Block.Grass.Id;
-
-            var clusterValue = CalculateNoiseValue(position, offset1, 0.02f);
-            var blobValue = CalculateNoiseValue(position, offset1, 0.05f);
-            var mountainValue = CalculateNoiseValue(position, offset0, 0.009f);
-            if ((Math.Abs(mountainValue) < 0.001f) && (blobValue < 0.2f))
-            {
-                id = Block.Dirt.Id;
-            }
-            else if (clusterValue > 0.9f)
-            {
-                id = Block.Grass.Id;
-            }
-            else if (clusterValue > 0.8f)
-            {
-                id = Block.Sand.Id;
-            }
-
-            mountainValue = Mathf.Sqrt(mountainValue);
-            mountainValue *= heightSwing;
-            mountainValue += heightBase;
-            mountainValue += (blobValue*10) - 5f;
-
-            return mountainValue >= position.y ? id : 0;
-        }
-
         private void CalculateMapFromScratch()
         {
             _map = new int[Width, Height, Width];
@@ -92,21 +49,12 @@ namespace Assets.Scripts
                 {
                     for (var z = 0; z < Width; z++)
                     {
-                        _map[x, y, z] = GetTheoreticalId(new Vector3(x, y, z) + transform.position);
+                        _map[x, y, z] = WorldGenerator.GetTheoreticalId(new Vector3(x, y, z) + transform.position);
                     }
                 }
             }
         }
-
-        private static float CalculateNoiseValue(Vector3 pos, Vector3 offset, float scale)
-        {
-            var noiseX = Mathf.Abs((pos.x + offset.x)*scale);
-            var noiseY = Mathf.Abs((pos.y + offset.y)*scale);
-            var noiseZ = Mathf.Abs((pos.z + offset.z)*scale);
-
-            return Mathf.Max(0, Noise.Generate(noiseX, noiseY, noiseZ));
-        }
-        
+      
         private IEnumerator CreateVisualMesh()
         {
             _visualMesh = new Mesh();
@@ -302,7 +250,7 @@ namespace Assets.Scripts
                 }
                 if (chunk == null)
                 {
-                    return GetTheoreticalId(worldPosition);
+                    return WorldGenerator.GetTheoreticalId(worldPosition);
                 }
                 return chunk.GetId(worldPosition);
             }
