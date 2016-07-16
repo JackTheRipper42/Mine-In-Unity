@@ -49,6 +49,17 @@ namespace Assets.Scripts
             return GetBlockIdLocal(x, y, z);
         }
 
+        public int GetBlockIdGlobal(int worldX, int worldY, int worldZ)
+        {
+            int x;
+            int y;
+            int z;
+
+            CalculateLocalCoordinates(worldX, worldY, worldZ, out x, out y, out z);
+
+            return GetBlockIdLocal(x, y, z);
+        }
+
         public void SetBlockIdGlobal(Vector3 worldPosition, int id)
         {
             int x;
@@ -56,6 +67,17 @@ namespace Assets.Scripts
             int z;
 
             CalculateLocalCoordinates(worldPosition, out x, out y, out z);
+
+            SetBlockIdLocal(x, y, z, id);
+        }
+
+        public void SetBlockIdGlobal(int worldX, int worldY, int worldZ, int id)
+        {
+            int x;
+            int y;
+            int z;
+
+            CalculateLocalCoordinates(worldX, worldY, worldZ, out x, out y, out z);
 
             SetBlockIdLocal(x, y, z, id);
         }
@@ -360,6 +382,19 @@ namespace Assets.Scripts
             x = Mathf.FloorToInt(localPosition.x);
             y = Mathf.FloorToInt(localPosition.y);
             z = Mathf.FloorToInt(localPosition.z);
+        }
+
+        private void CalculateLocalCoordinates(
+            int worldX,
+            int worldY,
+            int worldZ,
+            out int x,
+            out int y,
+            out int z)
+        {
+            x = Mathf.FloorToInt(worldX - transform.position.x);
+            y = Mathf.FloorToInt(worldY - transform.position.y);
+            z = Mathf.FloorToInt(worldZ - transform.position.z);
         }
     }
 }

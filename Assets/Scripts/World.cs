@@ -35,12 +35,7 @@ namespace Assets.Scripts
                     var chunk = FindChunk(position);
                     if (chunk == null)
                     {
-                        var obj = Instantiate(ChunkPrefab);
-                        obj.transform.position = position;
-                        obj.transform.rotation = Quaternion.identity;
-                        chunk = obj.GetComponent<Chunk>();
-                        chunk.Initialize();
-                        _chunks.Add(chunk);
+                        CreateChunk(position);
                     }
                 }
             }
@@ -62,6 +57,35 @@ namespace Assets.Scripts
                 return _chunks[a];
             }
             return null;
+        }
+
+        public void SetBlockId(int x, int y, int z, int id)
+        {
+            var chunk = GetChunk(x, y, z);
+            chunk.SetBlockIdGlobal(x, y, z, id);
+        }
+
+        public int GetBlockId(int x, int y, int z)
+        {
+            var chunk = GetChunk(x, y, z);
+            return chunk.GetBlockIdGlobal(x, y, z);
+        }
+
+        private Chunk GetChunk(int x, int y, int z)
+        {
+            var position = new Vector3(x, y, z);
+            return FindChunk(position) ?? CreateChunk(position);
+        }
+
+        private Chunk CreateChunk(Vector3 position)
+        {
+            var obj = Instantiate(ChunkPrefab);
+            obj.transform.position = position;
+            obj.transform.rotation = Quaternion.identity;
+            var chunk = obj.GetComponent<Chunk>();
+            chunk.Initialize();
+            _chunks.Add(chunk);
+            return chunk;
         }
     }
 }
