@@ -149,7 +149,6 @@ namespace Assets.Scripts
                 filterMode = FilterMode.Trilinear,
                 anisoLevel = 16,
                 wrapMode = TextureWrapMode.Clamp,
-                alphaIsTransparency = true,
             };
 
             chunkTexture.SetPixels(mainTexturePixels);
