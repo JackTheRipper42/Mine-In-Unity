@@ -56,9 +56,9 @@ namespace Assets.Scripts
 
                     if (Input.GetMouseButtonDown(2))
                     {
-                        var p = hit.point;
-                        p -= hit.normal/4;
-                        SelectedInventory = chunk.GetId(p);
+                        var worldPosition = hit.point;
+                        worldPosition -= hit.normal/4;
+                        SelectedInventory = chunk.GetBlockIdGlobal(worldPosition);
                     }
                 }
             }

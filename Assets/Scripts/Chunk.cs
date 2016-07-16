@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using UnityEngine;
 using Random = UnityEngine.Random;
 
@@ -241,7 +242,7 @@ namespace Assets.Scripts
             return Block.Blocks[id].IsTransparent(Side.Up);
         }
 
-        public int GetId(int x, int y, int z)
+        private int GetId(int x, int y, int z)
         {
 
             if ((y < 0) || (y >= Height))
@@ -266,7 +267,7 @@ namespace Assets.Scripts
             return _map[x, y, z];
         }
 
-        public int GetId(Vector3 worldPosition)
+        private int GetId(Vector3 worldPosition)
         {
             worldPosition -= transform.position;
             var x = Mathf.FloorToInt(worldPosition.x);
@@ -331,6 +332,35 @@ namespace Assets.Scripts
                 }
             }
             return true;
+        }
+
+        public int GetBlockIdGlobal(Vector3 worldPosition)
+        {
+            var localPosition = worldPosition - transform.position;
+            var x = Mathf.FloorToInt(localPosition.x);
+            var y = Mathf.FloorToInt(localPosition.y);
+            var z = Mathf.FloorToInt(localPosition.z);
+
+            return GetBlockIdLocal(x, y, z);
+        }
+
+        private int GetBlockIdLocal(int x, int y, int z)
+        {
+            if (x < 0 || x >= Width)
+            {
+                throw new ArgumentOutOfRangeException("x", x, "The x coordinate is invalid.");
+            }
+            if (z < 0 || z >= Width)
+            {
+                throw new ArgumentOutOfRangeException("z", z, "The z coordinate is invalid.");
+            }
+
+            if ((y < 0) || (y >= Height))
+            {
+                return Block.Air.Id;
+            }
+
+            return _map[x, y, z];
         }
     }
 }
