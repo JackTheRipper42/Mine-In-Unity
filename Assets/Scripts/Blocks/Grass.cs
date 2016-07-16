@@ -4,6 +4,10 @@ namespace Assets.Scripts.Blocks
 {
     public class Grass : Block
     {
+        private const string DirtUvName = "dirt";
+        private const string GrassUvName = "grass";
+        private const string GrassSideUvName = "grass side";
+
         public Grass(int id) : base(id)
         {
         }
@@ -13,17 +17,17 @@ namespace Assets.Scripts.Blocks
             switch (side)
             {
                 case Side.Up:
-                    return "grass";
+                    return GrassUvName;
                 case Side.Down:
-                    return "dirt";
+                    return DirtUvName;
                 case Side.Right:
-                    return "grass side";
+                    return IsRightDirty(x, y, z, world) ? GrassSideUvName : GrassUvName;
                 case Side.Left:
-                    return "grass side";
+                    return IsLeftDirty(x, y, z, world) ? GrassSideUvName : GrassUvName;
                 case Side.Front:
-                    return "grass side";
+                    return IsFrontDirty(x, y, z, world) ? GrassSideUvName : GrassUvName;
                 case Side.Back:
-                    return "grass side";
+                    return IsBackDirty(x, y, z, world) ? GrassSideUvName : GrassUvName;
                 default:
                     throw new ArgumentOutOfRangeException("side", side, null);
             }
@@ -31,6 +35,74 @@ namespace Assets.Scripts.Blocks
 
         public override bool IsTransparent(int x, int y, int z, World world, Side side)
         {
+            return false;
+        }
+
+        private bool IsRightDirty(int x, int y, int z, World world)
+        {
+            if (Blocks[world.GetBlockId(x + 1, y - 1, z)].Id != Id)
+            {
+                return true;
+            }
+            if (!Blocks[world.GetBlockId(x, y + 1, z)].IsTransparent(x, y + 1, z, world, Side.Down))
+            {
+                return true;
+            }
+            if (!Blocks[world.GetBlockId(x + 1, y, z)].IsTransparent(x + 1, y, z, world, Side.Left))
+            {
+                return true;
+            }
+            return false;
+        }
+
+        private bool IsLeftDirty(int x, int y, int z, World world)
+        {
+            if (Blocks[world.GetBlockId(x - 1, y - 1, z)].Id != Id)
+            {
+                return true;
+            }
+            if (!Blocks[world.GetBlockId(x, y + 1, z)].IsTransparent(x, y + 1, z, world, Side.Down))
+            {
+                return true;
+            }
+            if (!Blocks[world.GetBlockId(x - 1, y, z)].IsTransparent(x - 1, y, z, world, Side.Right))
+            {
+                return true;
+            }
+            return false;
+        }
+
+        private bool IsFrontDirty(int x, int y, int z, World world)
+        {
+            if (Blocks[world.GetBlockId(x, y - 1, z + 1)].Id != Id)
+            {
+                return true;
+            }
+            if (!Blocks[world.GetBlockId(x, y + 1, z)].IsTransparent(x, y + 1, z, world, Side.Down))
+            {
+                return true;
+            }
+            if (!Blocks[world.GetBlockId(x, y, z + 1)].IsTransparent(x, y, z + 1, world, Side.Back))
+            {
+                return true;
+            }
+            return false;
+        }
+
+        private bool IsBackDirty(int x, int y, int z, World world)
+        {
+            if (Blocks[world.GetBlockId(x, y - 1, z - 1)].Id != Id)
+            {
+                return true;
+            }
+            if (!Blocks[world.GetBlockId(x, y + 1, z)].IsTransparent(x, y + 1, z, world, Side.Down))
+            {
+                return true;
+            }
+            if (!Blocks[world.GetBlockId(x, y, z - 1)].IsTransparent(x, y, z - 1, world, Side.Front))
+            {
+                return true;
+            }
             return false;
         }
     }

@@ -61,20 +61,18 @@ namespace Assets.Scripts
 
         public void SetBlockId(int x, int y, int z, int id)
         {
-            var chunk = GetChunk(x, y, z);
+            var position = new Vector3(x, y, z);
+            var chunk = FindChunk(position) ?? CreateChunk(position);
             chunk.SetBlockIdGlobal(x, y, z, id);
         }
 
         public int GetBlockId(int x, int y, int z)
         {
-            var chunk = GetChunk(x, y, z);
-            return chunk.GetBlockIdGlobal(x, y, z);
-        }
-
-        private Chunk GetChunk(int x, int y, int z)
-        {
             var position = new Vector3(x, y, z);
-            return FindChunk(position) ?? CreateChunk(position);
+            var chunk = FindChunk(position);
+            return chunk != null
+                ? chunk.GetBlockIdGlobal(x, y, z)
+                : WorldGenerator.GetTheoreticalId(new Vector3(x, y, z), this);
         }
 
         private Chunk CreateChunk(Vector3 position)
