@@ -4,9 +4,9 @@ namespace Assets.Scripts
 {
     public static class WorldGenerator
     {
-        public static int GetTheoreticalId(Vector3 worldPosition)
+        public static int GetTheoreticalId(Vector3 worldPosition, World world)
         {
-            Random.seed = World.CurrentWorld.Seed;
+            Random.seed = world.Seed;
 
             var grain0Offset = new Vector3(Random.value * 10000, Random.value * 10000, Random.value * 10000);
             var grain1Offset = new Vector3(Random.value * 10000, Random.value * 10000, Random.value * 10000);

@@ -4,9 +4,6 @@ namespace Assets.Scripts
 {
     public class World : MonoBehaviour
     {
-
-        public static World CurrentWorld;
-
         public int Seed;
         public float ViewRange = 30;
         public Chunk ChunkFab;
@@ -14,7 +11,6 @@ namespace Assets.Scripts
         protected virtual void Awake()
         {
             Cursor.visible = false;
-            CurrentWorld = this;
             if (Seed == 0)
             {
                 Seed = Random.Range(0, int.MaxValue);

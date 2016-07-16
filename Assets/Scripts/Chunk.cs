@@ -21,9 +21,11 @@ namespace Assets.Scripts
         private Mesh _visualMesh;
         private MeshCollider _meshCollider;
         private MeshFilter _meshFilter;
-
+        private World _world;
+        
         protected virtual void Start()
         {
+            _world = FindObjectOfType<World>();
             Chunks.Add(this);
 
             _meshCollider = GetComponent<MeshCollider>();
@@ -41,7 +43,7 @@ namespace Assets.Scripts
         {
             _map = new int[Width, Height, Width];
 
-            Random.seed = World.CurrentWorld.Seed;
+            Random.seed = _world.Seed;
 
             for (var x = 0; x < Width; x++)
             {
@@ -49,7 +51,9 @@ namespace Assets.Scripts
                 {
                     for (var z = 0; z < Width; z++)
                     {
-                        _map[x, y, z] = WorldGenerator.GetTheoreticalId(new Vector3(x, y, z) + transform.position);
+                        _map[x, y, z] = WorldGenerator.GetTheoreticalId(
+                            new Vector3(x, y, z) + transform.position,
+                            _world);
                     }
                 }
             }
@@ -250,7 +254,7 @@ namespace Assets.Scripts
                 }
                 if (chunk == null)
                 {
-                    return WorldGenerator.GetTheoreticalId(worldPosition);
+                    return WorldGenerator.GetTheoreticalId(worldPosition, _world);
                 }
                 return chunk.GetId(worldPosition);
             }
