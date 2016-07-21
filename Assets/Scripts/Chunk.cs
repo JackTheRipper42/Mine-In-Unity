@@ -338,9 +338,11 @@ namespace Assets.Scripts
             {
                 var worldPosition = new Position3(x, y, z) + Data.Position;
                 var chunk = _world.FindChunk(worldPosition);
-                id = chunk == null
-                    ? WorldGenerator.GetTheoreticalId(worldPosition, _world)
-                    : chunk.GetBlockIdGlobal(worldPosition);
+                if (chunk == null)
+                {
+                    return true;
+                }
+                id = chunk.GetBlockIdGlobal(worldPosition);
             }
             else
             {
