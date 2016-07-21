@@ -15,7 +15,6 @@ namespace Assets.Scripts
 
         private ResourceManager _resourceManager;
 
-        private Mesh _visualMesh;
         private MeshCollider _meshCollider;
         private MeshFilter _meshFilter;
         private World _world;
@@ -119,17 +118,18 @@ namespace Assets.Scripts
         {           
             if (IsDirty)
             {
-                CreateVisualMesh();
+                CreateMeshes();
                 IsDirty = false;
             }
         }
 
-        private void CreateVisualMesh()
+        private void CreateMeshes()
         {
-            _visualMesh = new Mesh();
-            var vertices = new List<Vector3>();
+            var visualVertices = new List<Vector3>();
             var uvs = new List<Vector2>();
-            var triangles = new List<int>();
+            var visualTriangles = new List<int>();
+            var colliderVertices = new List<Vector3>();
+            var colliderTriangles = new List<int>();
 
             for (var x = 0; x < Width; x++)
             {
@@ -148,6 +148,81 @@ namespace Assets.Scripts
                         var worldY = y + Data.Position.Y;
                         var worldZ = z + Data.Position.Z;
 
+                        if (Block.Blocks[id].IsSolid(x, y, z, _world))
+                        {
+                            // Left wall
+                            if (!IsSolid(x - 1, y, z))
+                            {
+                                BuildFace(
+                                    new Vector3(x, y, z),
+                                    Vector3.up,
+                                    Vector3.forward,
+                                    false,
+                                    colliderVertices,
+                                    colliderTriangles);
+                            }
+
+                            // Right wall
+                            if (!IsSolid(x + 1, y, z))
+                            {
+                                BuildFace(
+                                    new Vector3(x + 1, y, z),
+                                    Vector3.up,
+                                    Vector3.forward,
+                                    true,
+                                    colliderVertices,
+                                    colliderTriangles);
+                            }
+
+                            // Bottom wall
+                            if (!IsSolid(x, y - 1, z))
+                            {
+                                BuildFace(
+                                    new Vector3(x, y, z),
+                                    Vector3.forward,
+                                    Vector3.right,
+                                    false,
+                                    colliderVertices,
+                                    colliderTriangles);
+                            }
+
+                            // Top wall
+                            if (!IsSolid(x, y + 1, z))
+                            {
+                                BuildFace(
+                                    new Vector3(x, y + 1, z),
+                                    Vector3.forward,
+                                    Vector3.right,
+                                    true,
+                                    colliderVertices,
+                                    colliderTriangles);
+                            }
+
+                            // Back
+                            if (!IsSolid(x, y, z - 1))
+                            {
+                                BuildFace(
+                                    new Vector3(x, y, z),
+                                    Vector3.up,
+                                    Vector3.right,
+                                    true,
+                                    colliderVertices,
+                                    colliderTriangles);
+                            }
+
+                            // Front
+                            if (!IsSolid(x, y, z + 1))
+                            {
+                                BuildFace(
+                                    new Vector3(x, y, z + 1),
+                                    Vector3.up,
+                                    Vector3.right,
+                                    false,
+                                    colliderVertices,
+                                    colliderTriangles);
+                            }
+                        }
+
                         // Left wall
                         if (IsTransparent(x - 1, y, z, Side.Right))
                         {
@@ -161,9 +236,9 @@ namespace Assets.Scripts
                                 Vector3.up,
                                 Vector3.forward,
                                 false,
-                                vertices,
+                                visualVertices,
                                 uvs,
-                                triangles);
+                                visualTriangles);
                         }
 
                         // Right wall
@@ -179,9 +254,9 @@ namespace Assets.Scripts
                                 Vector3.up,
                                 Vector3.forward,
                                 true,
-                                vertices,
+                                visualVertices,
                                 uvs,
-                                triangles);
+                                visualTriangles);
                         }
 
                         // Bottom wall
@@ -197,9 +272,9 @@ namespace Assets.Scripts
                                 Vector3.forward,
                                 Vector3.right,
                                 false,
-                                vertices,
+                                visualVertices,
                                 uvs,
-                                triangles);
+                                visualTriangles);
                         }
 
                         // Top wall
@@ -215,9 +290,9 @@ namespace Assets.Scripts
                                 Vector3.forward,
                                 Vector3.right,
                                 true,
-                                vertices,
+                                visualVertices,
                                 uvs,
-                                triangles);
+                                visualTriangles);
                         }
 
                         // Back
@@ -233,9 +308,9 @@ namespace Assets.Scripts
                                 Vector3.up,
                                 Vector3.right,
                                 true,
-                                vertices,
+                                visualVertices,
                                 uvs,
-                                triangles);
+                                visualTriangles);
                         }
 
                         // Front
@@ -251,24 +326,33 @@ namespace Assets.Scripts
                                 Vector3.up,
                                 Vector3.right,
                                 false,
-                                vertices,
+                                visualVertices,
                                 uvs,
-                                triangles);
+                                visualTriangles);
                         }
                     }
                 }
             }
 
-            _visualMesh.vertices = vertices.ToArray();
-            _visualMesh.uv = uvs.ToArray();
-            _visualMesh.triangles = triangles.ToArray();
-            _visualMesh.RecalculateBounds();
-            _visualMesh.RecalculateNormals();
+            var visualMesh = new Mesh
+            {
+                vertices = visualVertices.ToArray(),
+                uv = uvs.ToArray(),
+                triangles = visualTriangles.ToArray()
+            };
+            visualMesh.RecalculateBounds();
+            visualMesh.RecalculateNormals();
+            _meshFilter.mesh = visualMesh;
 
-            _meshFilter.mesh = _visualMesh;
-
+            var colliderMesh = new Mesh
+            {
+                vertices = colliderVertices.ToArray(),
+                triangles = colliderTriangles.ToArray()
+            };
+            colliderMesh.RecalculateBounds();
+            colliderMesh.RecalculateNormals();
             _meshCollider.sharedMesh = null;
-            _meshCollider.sharedMesh = _visualMesh;
+            _meshCollider.sharedMesh = colliderMesh;
         }
 
         private void BuildFace(
@@ -285,12 +369,13 @@ namespace Assets.Scripts
             ICollection<Vector2> uvs,
             ICollection<int> triangles)
         {
-            var index = vertices.Count;
-
-            vertices.Add(corner);
-            vertices.Add(corner + up);
-            vertices.Add(corner + up + right);
-            vertices.Add(corner + right);
+            BuildFace(
+                corner,
+                up,
+                right,
+                reversed,
+                vertices,
+                triangles);
 
             var uvWidth = _resourceManager.BlockUvSize;
             var uvCorner = _resourceManager.BlockUvPositions[Block.Blocks[id].GetUvName(x, y, z, _world, side)];
@@ -299,6 +384,22 @@ namespace Assets.Scripts
             uvs.Add(new Vector2(uvCorner.x, uvCorner.y + uvWidth.y));
             uvs.Add(new Vector2(uvCorner.x + uvWidth.x, uvCorner.y + uvWidth.y));
             uvs.Add(new Vector2(uvCorner.x + uvWidth.x, uvCorner.y));
+        }
+
+        private void BuildFace(
+            Vector3 corner,
+            Vector3 up,
+            Vector3 right,
+            bool reversed,
+            ICollection<Vector3> vertices,
+            ICollection<int> triangles)
+        {
+            var index = vertices.Count;
+
+            vertices.Add(corner);
+            vertices.Add(corner + up);
+            vertices.Add(corner + up + right);
+            vertices.Add(corner + right);
 
             if (reversed)
             {
@@ -318,7 +419,6 @@ namespace Assets.Scripts
                 triangles.Add(index + 2);
                 triangles.Add(index + 0);
             }
-
         }
 
         private bool IsTransparent(int x, int y, int z, Side side)
@@ -355,6 +455,41 @@ namespace Assets.Scripts
                 z + Data.Position.Z,
                 _world,
                 side);
+        }
+
+        private bool IsSolid(int x, int y, int z)
+        {
+            if (y < 0)
+            {
+                return false;
+            }
+            if (y >= Height)
+            {
+                return true;
+            }
+
+            int id;
+
+            if ((x < 0) || (z < 0) || (x >= Width) || (z >= Width))
+            {
+                var worldPosition = new Position3(x, y, z) + Data.Position;
+                var chunk = _world.FindChunk(worldPosition);
+                if (chunk == null)
+                {
+                    return false;
+                }
+                id = chunk.GetBlockIdGlobal(worldPosition);
+            }
+            else
+            {
+                id = Data.Map[x, y, z];
+            }
+
+            return Block.Blocks[id].IsSolid(
+                x + Data.Position.X,
+                y + Data.Position.Y,
+                z + Data.Position.Z,
+                _world);
         }
 
         private void SetBlockIdLocal(int x, int y, int z, int id)
