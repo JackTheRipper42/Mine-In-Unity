@@ -1,6 +1,8 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using Assets.Scripts.Streaming;
 using UnityEngine;
 
 namespace Assets.Scripts
@@ -12,7 +14,7 @@ namespace Assets.Scripts
         public GameObject ChunkPrefab;
 
         private List<Chunk> _chunks;
-        private Queue<Position3> _chunkCreationQueue; 
+        private Queue<ChunkData> _chunkCreationQueue;
 
         protected virtual void Awake()
         {
@@ -22,7 +24,7 @@ namespace Assets.Scripts
                 Seed = Random.Range(0, int.MaxValue);
             }
             _chunks = new List<Chunk>();
-            _chunkCreationQueue = new Queue<Position3>();
+            _chunkCreationQueue = new Queue<ChunkData>();
             StartCoroutine(ChunkCreator());
             StartCoroutine(OnTickUpdater());
         }
@@ -38,9 +40,9 @@ namespace Assets.Scripts
                         0,
                         Mathf.FloorToInt(z/Chunk.Width)*Chunk.Width);
                     var chunk = FindChunk(chunkPosition);
-                    if (chunk == null && !_chunkCreationQueue.Contains(chunkPosition))
+                    if (chunk == null && _chunkCreationQueue.All(data => data.Position != chunkPosition))
                     {
-                        _chunkCreationQueue.Enqueue(chunkPosition);
+                        _chunkCreationQueue.Enqueue(new ChunkData(chunkPosition, CalculateMapFromScratch(chunkPosition)));
                     }
                 }
             }
@@ -66,8 +68,12 @@ namespace Assets.Scripts
 
         public void SetBlockId(int x, int y, int z, int id)
         {
-            var position = new Position3(x, y, z);
-            var chunk = FindChunk(position) ?? CreateChunk(new Position3(x, 0, z));
+            var worldPosition = new Position3(x, y, z);
+            var chunkPosition = new Position3(x, 0, z);
+            var chunk = FindChunk(worldPosition) ?? CreateChunk(
+                new ChunkData(
+                    chunkPosition,
+                    CalculateMapFromScratch(chunkPosition)));
             chunk.SetBlockIdGlobal(x, y, z, id);
         }
 
@@ -80,13 +86,75 @@ namespace Assets.Scripts
                 : WorldGenerator.GetTheoreticalId(position, this);
         }
 
-        private Chunk CreateChunk(Position3 position)
+        public void Save()
+        {
+            var headerFormatter = new WorldHeaderFormatter();
+            var chunkFormatter = new ChunkFormatter();
+            using (var stream = new FileStream("World", FileMode.Create, FileAccess.Write))
+            {
+                headerFormatter.Serialize(stream, new WorldHeader
+                {
+                    Seed = Seed,
+                    Chunks = _chunks.Count
+                });
+                foreach (var chunk in _chunks)
+                {
+                    chunkFormatter.Serialize(stream, chunk.Data);
+                }
+            }
+        }
+
+        public void Load()
+        {
+            foreach (var chunk in _chunks)
+            {
+                Destroy(chunk.gameObject);
+            }
+            _chunkCreationQueue.Clear();
+            _chunks.Clear();
+
+            var headerFormatter = new WorldHeaderFormatter();
+            var chunkFormatter = new ChunkFormatter();
+            using (var stream = new FileStream("World", FileMode.Open, FileAccess.Read))
+            {
+                var header = headerFormatter.Deserialize(stream);
+                Seed = header.Seed;
+                for (var i = 0; i < header.Chunks; i++)
+                {
+                    var chunkData = chunkFormatter.Deserialize(stream);
+                    _chunkCreationQueue.Enqueue(chunkData);
+                }
+            }
+        }
+
+        private Chunk CreateChunk(ChunkData chunkData)
         {
             var obj = Instantiate(ChunkPrefab);
             var chunk = obj.GetComponent<Chunk>();
-            chunk.Initialize(position);
+            chunk.Initialize(chunkData);
             _chunks.Add(chunk);
             return chunk;
+        }
+
+        private Map CalculateMapFromScratch(Position3 position)
+        {
+            Random.seed = Seed;
+            var map = new Map();
+
+            for (var x = 0; x < Chunk.Width; x++)
+            {
+                for (var y = 0; y < Chunk.Height; y++)
+                {
+                    for (var z = 0; z < Chunk.Width; z++)
+                    {
+                        var id = WorldGenerator.GetTheoreticalId(
+                            new Position3(x, y, z) + position,
+                            this);
+                        map[x, y, z] = id;
+                    }
+                }
+            }
+            return map;
         }
 
         private IEnumerator ChunkCreator()
@@ -95,8 +163,8 @@ namespace Assets.Scripts
             {
                 if (_chunkCreationQueue.Any())
                 {
-                    var chunkPosition = _chunkCreationQueue.Dequeue();
-                    CreateChunk(chunkPosition);
+                    var chunkData = _chunkCreationQueue.Dequeue();
+                    CreateChunk(chunkData);
                 }
                 yield return new WaitForSeconds(0.01f);
             }

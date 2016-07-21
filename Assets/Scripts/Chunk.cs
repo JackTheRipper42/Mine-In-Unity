@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
-using Random = UnityEngine.Random;
 
 namespace Assets.Scripts
 {
@@ -21,20 +20,21 @@ namespace Assets.Scripts
         private MeshFilter _meshFilter;
         private World _world;
         private HashSet<Position3> _randomTickBlocks;
-        private ChunkData _chunkData;
 
         public bool IsDirty { get; private set; }
+
+        public ChunkData Data { get; private set; }
 
         public int TickUpdateBlocks
         {
             get { return _randomTickBlocks.Count; }
         }
 
-        public void Initialize(Position3 chunkPosition)
+        public void Initialize(ChunkData chunkData)
         {
-            transform.position = new Vector3(chunkPosition.X, chunkPosition.Y, chunkPosition.Z);
+            transform.position = chunkData.Position.ToVector3();
             transform.rotation = Quaternion.identity;
-            _chunkData = new ChunkData(chunkPosition, new int[Width*Width*Height]);
+            Data = chunkData;
 
             _world = FindObjectOfType<World>();
 
@@ -45,36 +45,51 @@ namespace Assets.Scripts
             _resourceManager = FindObjectOfType<ResourceManager>();
             meshRenderer.material = _resourceManager.ChunkMaterial;
 
-            CalculateMapFromScratch();
+            _randomTickBlocks = new HashSet<Position3>();
+            for (var x = 0; x < Width; x++)
+            {
+                for (var y = 0; y < Height; y++)
+                {
+                    for (var z = 0; z < Width; z++)
+                    {
+                        var id = Data.Map[x, y, z];
+                        if (Block.Blocks[id].RequiresRandomTickUpdate)
+                        {
+                            _randomTickBlocks.Add(new Position3(x, y, z));
+                        }
+                    }
+                }
+            }
+
             IsDirty = true;
         }
 
         public int GetBlockIdGlobal(Position3 worldPosition)
         {
-            var localPosition = worldPosition - _chunkData.Position;
+            var localPosition = worldPosition - Data.Position;
             return GetBlockIdLocal(localPosition.X, localPosition.Y, localPosition.Z);
         }
 
         public int GetBlockIdGlobal(int worldX, int worldY, int worldZ)
         {
             return GetBlockIdLocal(
-                worldX - _chunkData.Position.X,
-                worldY - _chunkData.Position.Y,
-                worldZ - _chunkData.Position.Z);
+                worldX - Data.Position.X,
+                worldY - Data.Position.Y,
+                worldZ - Data.Position.Z);
         }
 
         public void SetBlockIdGlobal(Position3 worldPosition, int id)
         {
-            var localPosition = worldPosition - _chunkData.Position;
+            var localPosition = worldPosition - Data.Position;
             SetBlockIdLocal(localPosition.X, localPosition.Y, localPosition.Z, id);
         }
 
         public void SetBlockIdGlobal(int worldX, int worldY, int worldZ, int id)
         {
             SetBlockIdLocal(
-                worldX - _chunkData.Position.X,
-                worldY - _chunkData.Position.Y,
-                worldZ - _chunkData.Position.Z,
+                worldX - Data.Position.X,
+                worldY - Data.Position.Y,
+                worldZ - Data.Position.Z,
                 id);
         }
 
@@ -82,21 +97,21 @@ namespace Assets.Scripts
         {
             foreach (var position in _randomTickBlocks.ToList())
             {
-                var id = _chunkData.Map[GetIndex(position.X, position.Y, position.Z)];
-                var worldPosition = position + _chunkData.Position;
+                var id = Data.Map[position.X, position.Y, position.Z];
+                var worldPosition = position + Data.Position;
                 Block.Blocks[id].OnRandomTick(worldPosition.X, worldPosition.Y, worldPosition.Z, _world);
             }
         }
 
         public void EnableRandomTickUpdate(Position3 worldPosition)
         {
-            var localPosition = worldPosition - _chunkData.Position;
+            var localPosition = worldPosition - Data.Position;
             _randomTickBlocks.Add(localPosition);
         }
 
         public void DisableRandomTickUpdate(Position3 worldPosition)
         {
-            var localPosition = worldPosition - _chunkData.Position;
+            var localPosition = worldPosition - Data.Position;
             _randomTickBlocks.Remove(localPosition);
         }
 
@@ -106,31 +121,6 @@ namespace Assets.Scripts
             {
                 CreateVisualMesh();
                 IsDirty = false;
-            }
-        }
-
-        private void CalculateMapFromScratch()
-        {
-            _randomTickBlocks = new HashSet<Position3>();
-
-            Random.seed = _world.Seed;
-
-            for (var x = 0; x < Width; x++)
-            {
-                for (var y = 0; y < Height; y++)
-                {
-                    for (var z = 0; z < Width; z++)
-                    {
-                        var id = WorldGenerator.GetTheoreticalId(
-                            new Position3(x, y, z) + _chunkData.Position,
-                            _world);
-                        _chunkData.Map[GetIndex(x, y, z)] = id;
-                        if (Block.Blocks[id].RequiresRandomTickUpdate)
-                        {
-                            _randomTickBlocks.Add(new Position3(x, y, z));
-                        }
-                    }
-                }
             }
         }
 
@@ -147,16 +137,16 @@ namespace Assets.Scripts
                 {
                     for (var z = 0; z < Width; z++)
                     {
-                        if (_chunkData.Map[GetIndex(x, y, z)] == 0)
+                        if (Data.Map[x, y, z] == 0)
                         {
                             continue;
                         }
 
-                        var id = _chunkData.Map[GetIndex(x, y, z)];
+                        var id = Data.Map[x, y, z];
 
-                        var worldX = x + _chunkData.Position.X;
-                        var worldY = y + _chunkData.Position.Y;
-                        var worldZ = z + _chunkData.Position.Z;
+                        var worldX = x + Data.Position.X;
+                        var worldY = y + Data.Position.Y;
+                        var worldZ = z + Data.Position.Z;
 
                         // Left wall
                         if (IsTransparent(x - 1, y, z, Side.Right))
@@ -346,7 +336,7 @@ namespace Assets.Scripts
 
             if ((x < 0) || (z < 0) || (x >= Width) || (z >= Width))
             {
-                var worldPosition = new Position3(x, y, z) + _chunkData.Position;
+                var worldPosition = new Position3(x, y, z) + Data.Position;
                 var chunk = _world.FindChunk(worldPosition);
                 id = chunk == null
                     ? WorldGenerator.GetTheoreticalId(worldPosition, _world)
@@ -354,13 +344,13 @@ namespace Assets.Scripts
             }
             else
             {
-                id = _chunkData.Map[GetIndex(x, y, z)];
+                id = Data.Map[x, y, z];
             }
 
             return Block.Blocks[id].IsTransparent(
-                x + _chunkData.Position.X,
-                y + _chunkData.Position.Y,
-                z + _chunkData.Position.Z,
+                x + Data.Position.X,
+                y + Data.Position.Y,
+                z + Data.Position.Z,
                 _world,
                 side);
         }
@@ -380,8 +370,7 @@ namespace Assets.Scripts
                 throw new ArgumentOutOfRangeException("z", z, "The z coordinate is invalid.");
             }
 
-            var index = GetIndex(x, y, z);
-            var oldId = _chunkData.Map[index];
+            var oldId = Data.Map[x, y, z];
 
             if (oldId == id)
             {
@@ -395,13 +384,13 @@ namespace Assets.Scripts
             {
                 _randomTickBlocks.Add(localPosition);
             }
-            _chunkData.Map[index] = id;
+            Data.Map[x, y, z] = id;
 
             IsDirty = true;
 
             if (x == 0)
             {
-                var chunk = _world.FindChunk(new Position3(x - 2, y, z) + _chunkData.Position);
+                var chunk = _world.FindChunk(new Position3(x - 2, y, z) + Data.Position);
                 if (chunk != null)
                 {
                     chunk.IsDirty = true;
@@ -409,7 +398,7 @@ namespace Assets.Scripts
             }
             if (x == Width - 1)
             {
-                var chunk = _world.FindChunk(new Position3(x + 2, y, z) + _chunkData.Position);
+                var chunk = _world.FindChunk(new Position3(x + 2, y, z) + Data.Position);
                 if (chunk != null)
                 {
                     chunk.IsDirty = true;
@@ -417,7 +406,7 @@ namespace Assets.Scripts
             }
             if (z == 0)
             {
-                var chunk = _world.FindChunk(new Position3(x, y, z - 2) + _chunkData.Position);
+                var chunk = _world.FindChunk(new Position3(x, y, z - 2) + Data.Position);
                 if (chunk != null)
                 {
                     chunk.IsDirty = true;
@@ -425,7 +414,7 @@ namespace Assets.Scripts
             }
             if (z == Width - 1)
             {
-                var chunk = _world.FindChunk(new Position3(x, y, z + 2) + _chunkData.Position);
+                var chunk = _world.FindChunk(new Position3(x, y, z + 2) + Data.Position);
                 if (chunk != null)
                 {
                     chunk.IsDirty = true;
@@ -449,12 +438,7 @@ namespace Assets.Scripts
                 return Block.Air.Id;
             }
 
-            return _chunkData.Map[GetIndex(x, y, z)];
-        }
-
-        private static int GetIndex(int x, int y, int z)
-        {
-            return z + y*Height + x*Height*Width;
+            return Data.Map[x, y, z];
         }
     }
 }

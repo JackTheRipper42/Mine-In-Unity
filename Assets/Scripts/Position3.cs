@@ -125,6 +125,11 @@ namespace Assets.Scripts
                 Mathf.FloorToInt(vector3.z));
         }
 
+        public Vector3 ToVector3()
+        {
+            return new Vector3(_x, _y, _z);
+        }
+
         private static bool Equals(Position3 a, Position3 b)
         {
             return a._x == b._x && a._y == b._y && a._z == b._z;
