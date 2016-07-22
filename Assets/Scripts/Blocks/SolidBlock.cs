@@ -10,6 +10,11 @@
             _uvName = uvName;
         }
 
+        public override bool IsSolid
+        {
+            get { return true; }
+        }
+
         public override string GetUvName(int x, int y, int z, IWorld world, Side side)
         {
             return _uvName;
@@ -18,11 +23,6 @@
         public override bool IsTransparent(int x, int y, int z, IWorld world, Side side)
         {
             return false;
-        }
-
-        public override bool IsSolid(int x, int y, int z, IWorld world)
-        {
-            return true;
         }
     }
 }

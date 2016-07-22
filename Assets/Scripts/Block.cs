@@ -41,7 +41,7 @@ namespace Assets.Scripts
 
         public abstract bool IsTransparent(int x, int y, int z, IWorld world, Side side);
 
-        public abstract bool IsSolid(int x, int y, int z, IWorld world);
+        public abstract bool IsSolid { get; }
 
         public virtual void OnRandomTick(int x, int y, int z, IWorld world)
         {

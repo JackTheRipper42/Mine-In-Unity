@@ -14,6 +14,11 @@ namespace Assets.Scripts.Blocks
         {
         }
 
+        public override bool IsSolid
+        {
+            get { return true; }
+        }
+
         public override string GetUvName(int x, int y, int z, IWorld world, Side side)
         {
             switch (side)
@@ -39,12 +44,6 @@ namespace Assets.Scripts.Blocks
         {
             return false;
         }
-
-        public override bool IsSolid(int x, int y, int z, IWorld world)
-        {
-            return true;
-        }
-
         public override void OnRandomTick(int x, int y, int z, IWorld world)
         {
             if (world.GetBlockId(x, y + 1, z) != Air.Id)

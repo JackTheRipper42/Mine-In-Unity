@@ -19,8 +19,8 @@ namespace Assets.Scripts
         private MeshFilter _meshFilter;
         private World _world;
         private HashSet<Position3> _randomTickBlocks;
-
-        public bool IsDirty { get; private set; }
+        private bool _isVisualMeshDirty;
+        private bool _isColliderMeshDirty;
 
         public ChunkData Data { get; private set; }
 
@@ -60,7 +60,8 @@ namespace Assets.Scripts
                 }
             }
 
-            IsDirty = true;
+            _isVisualMeshDirty = true;
+            _isColliderMeshDirty = true;
         }
 
         public int GetBlockIdGlobal(Position3 worldPosition)
@@ -116,10 +117,11 @@ namespace Assets.Scripts
 
         protected virtual void Update()
         {           
-            if (IsDirty)
+            if (_isVisualMeshDirty)
             {
                 CreateMeshes();
-                IsDirty = false;
+                _isVisualMeshDirty = false;
+                _isColliderMeshDirty = false;
             }
         }
 
@@ -148,78 +150,81 @@ namespace Assets.Scripts
                         var worldY = y + Data.Position.Y;
                         var worldZ = z + Data.Position.Z;
 
-                        if (Block.Blocks[id].IsSolid(x, y, z, _world))
+                        if (_isColliderMeshDirty)
                         {
-                            // Left wall
-                            if (!IsSolid(x - 1, y, z))
+                            if (Block.Blocks[id].IsSolid)
                             {
-                                BuildFace(
-                                    new Vector3(x, y, z),
-                                    Vector3.up,
-                                    Vector3.forward,
-                                    false,
-                                    colliderVertices,
-                                    colliderTriangles);
-                            }
+                                // Left wall
+                                if (!IsSolid(x - 1, y, z))
+                                {
+                                    BuildFace(
+                                        new Vector3(x, y, z),
+                                        Vector3.up,
+                                        Vector3.forward,
+                                        false,
+                                        colliderVertices,
+                                        colliderTriangles);
+                                }
 
-                            // Right wall
-                            if (!IsSolid(x + 1, y, z))
-                            {
-                                BuildFace(
-                                    new Vector3(x + 1, y, z),
-                                    Vector3.up,
-                                    Vector3.forward,
-                                    true,
-                                    colliderVertices,
-                                    colliderTriangles);
-                            }
+                                // Right wall
+                                if (!IsSolid(x + 1, y, z))
+                                {
+                                    BuildFace(
+                                        new Vector3(x + 1, y, z),
+                                        Vector3.up,
+                                        Vector3.forward,
+                                        true,
+                                        colliderVertices,
+                                        colliderTriangles);
+                                }
 
-                            // Bottom wall
-                            if (!IsSolid(x, y - 1, z))
-                            {
-                                BuildFace(
-                                    new Vector3(x, y, z),
-                                    Vector3.forward,
-                                    Vector3.right,
-                                    false,
-                                    colliderVertices,
-                                    colliderTriangles);
-                            }
+                                // Bottom wall
+                                if (!IsSolid(x, y - 1, z))
+                                {
+                                    BuildFace(
+                                        new Vector3(x, y, z),
+                                        Vector3.forward,
+                                        Vector3.right,
+                                        false,
+                                        colliderVertices,
+                                        colliderTriangles);
+                                }
 
-                            // Top wall
-                            if (!IsSolid(x, y + 1, z))
-                            {
-                                BuildFace(
-                                    new Vector3(x, y + 1, z),
-                                    Vector3.forward,
-                                    Vector3.right,
-                                    true,
-                                    colliderVertices,
-                                    colliderTriangles);
-                            }
+                                // Top wall
+                                if (!IsSolid(x, y + 1, z))
+                                {
+                                    BuildFace(
+                                        new Vector3(x, y + 1, z),
+                                        Vector3.forward,
+                                        Vector3.right,
+                                        true,
+                                        colliderVertices,
+                                        colliderTriangles);
+                                }
 
-                            // Back
-                            if (!IsSolid(x, y, z - 1))
-                            {
-                                BuildFace(
-                                    new Vector3(x, y, z),
-                                    Vector3.up,
-                                    Vector3.right,
-                                    true,
-                                    colliderVertices,
-                                    colliderTriangles);
-                            }
+                                // Back
+                                if (!IsSolid(x, y, z - 1))
+                                {
+                                    BuildFace(
+                                        new Vector3(x, y, z),
+                                        Vector3.up,
+                                        Vector3.right,
+                                        true,
+                                        colliderVertices,
+                                        colliderTriangles);
+                                }
 
-                            // Front
-                            if (!IsSolid(x, y, z + 1))
-                            {
-                                BuildFace(
-                                    new Vector3(x, y, z + 1),
-                                    Vector3.up,
-                                    Vector3.right,
-                                    false,
-                                    colliderVertices,
-                                    colliderTriangles);
+                                // Front
+                                if (!IsSolid(x, y, z + 1))
+                                {
+                                    BuildFace(
+                                        new Vector3(x, y, z + 1),
+                                        Vector3.up,
+                                        Vector3.right,
+                                        false,
+                                        colliderVertices,
+                                        colliderTriangles);
+                                }
                             }
                         }
 
@@ -344,15 +349,18 @@ namespace Assets.Scripts
             visualMesh.RecalculateNormals();
             _meshFilter.mesh = visualMesh;
 
-            var colliderMesh = new Mesh
+            if (_isColliderMeshDirty)
             {
-                vertices = colliderVertices.ToArray(),
-                triangles = colliderTriangles.ToArray()
-            };
-            colliderMesh.RecalculateBounds();
-            colliderMesh.RecalculateNormals();
-            _meshCollider.sharedMesh = null;
-            _meshCollider.sharedMesh = colliderMesh;
+                var colliderMesh = new Mesh
+                {
+                    vertices = colliderVertices.ToArray(),
+                    triangles = colliderTriangles.ToArray()
+                };
+                colliderMesh.RecalculateBounds();
+                colliderMesh.RecalculateNormals();
+                _meshCollider.sharedMesh = null;
+                _meshCollider.sharedMesh = colliderMesh;
+            }
         }
 
         private void BuildFace(
@@ -485,11 +493,7 @@ namespace Assets.Scripts
                 id = Data.Map[x, y, z];
             }
 
-            return Block.Blocks[id].IsSolid(
-                x + Data.Position.X,
-                y + Data.Position.Y,
-                z + Data.Position.Z,
-                _world);
+            return Block.Blocks[id].IsSolid;
         }
 
         private void SetBlockIdLocal(int x, int y, int z, int id)
@@ -523,14 +527,22 @@ namespace Assets.Scripts
             }
             Data.Map[x, y, z] = id;
 
-            IsDirty = true;
+            _isVisualMeshDirty = true;
+            if (Block.Blocks[id].IsSolid != Block.Blocks[oldId].IsSolid)
+            {
+                _isColliderMeshDirty = true;
+            }
 
             if (x == 0)
             {
                 var chunk = _world.FindChunk(new Position3(x - 2, y, z) + Data.Position);
                 if (chunk != null)
                 {
-                    chunk.IsDirty = true;
+                    chunk.SetVisualMeshDirty();
+                    if (_isColliderMeshDirty)
+                    {
+                        chunk.SetColliderMeshDirty();
+                    }
                 }
             }
             if (x == Width - 1)
@@ -538,7 +550,11 @@ namespace Assets.Scripts
                 var chunk = _world.FindChunk(new Position3(x + 2, y, z) + Data.Position);
                 if (chunk != null)
                 {
-                    chunk.IsDirty = true;
+                    chunk.SetVisualMeshDirty();
+                    if (_isColliderMeshDirty)
+                    {
+                        chunk.SetColliderMeshDirty();
+                    }
                 }
             }
             if (z == 0)
@@ -546,7 +562,11 @@ namespace Assets.Scripts
                 var chunk = _world.FindChunk(new Position3(x, y, z - 2) + Data.Position);
                 if (chunk != null)
                 {
-                    chunk.IsDirty = true;
+                    chunk.SetVisualMeshDirty();
+                    if (_isColliderMeshDirty)
+                    {
+                        chunk.SetColliderMeshDirty();
+                    }
                 }
             }
             if (z == Width - 1)
@@ -554,7 +574,11 @@ namespace Assets.Scripts
                 var chunk = _world.FindChunk(new Position3(x, y, z + 2) + Data.Position);
                 if (chunk != null)
                 {
-                    chunk.IsDirty = true;
+                    chunk.SetVisualMeshDirty();
+                    if (_isColliderMeshDirty)
+                    {
+                        chunk.SetColliderMeshDirty();
+                    }
                 }
             }
         }
@@ -576,6 +600,16 @@ namespace Assets.Scripts
             }
 
             return Data.Map[x, y, z];
+        }
+
+        private void SetVisualMeshDirty()
+        {
+            _isVisualMeshDirty = true;
+        }
+
+        private void SetColliderMeshDirty()
+        {
+            _isColliderMeshDirty = true;
         }
     }
 }
