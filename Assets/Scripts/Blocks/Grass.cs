@@ -44,6 +44,7 @@ namespace Assets.Scripts.Blocks
         {
             return false;
         }
+
         public override void OnRandomTick(int x, int y, int z, IWorld world)
         {
             if (world.GetBlockId(x, y + 1, z) != Air.Id)
@@ -52,6 +53,13 @@ namespace Assets.Scripts.Blocks
                 {
                     world.SetBlockId(x, y, z, Dirt.Id);
                 }
+            }
+            else
+            {
+                SpreadGrass(x + 1, y, z, world);
+                SpreadGrass(x - 1, y, z, world);
+                SpreadGrass(x, y, z + 1, world);
+                SpreadGrass(x, y, z - 1, world);
             }
         }
 
@@ -121,6 +129,17 @@ namespace Assets.Scripts.Blocks
                 return true;
             }
             return false;
+        }
+
+        private void SpreadGrass(int x, int y, int z, IWorld world)
+        {
+            if (world.GetBlockId(x, y, z) == Dirt.Id)
+            {
+                if (Random.Range(0, 100) > 95)
+                {
+                    world.SetBlockId(x, y, z, Grass.Id);
+                }
+            }
         }
     }
 }
