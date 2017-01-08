@@ -6,7 +6,7 @@ namespace Assets.Scripts
     {
         public static int GetTheoreticalId(Position3 worldPosition, World world)
         {
-            Random.seed = world.Seed;
+            Random.InitState(world.Seed);
 
             var grain0Offset = new Vector3(Random.value * 10000, Random.value * 10000, Random.value * 10000);
             var grain1Offset = new Vector3(Random.value * 10000, Random.value * 10000, Random.value * 10000);

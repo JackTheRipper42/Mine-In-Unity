@@ -138,7 +138,7 @@ namespace Assets.Scripts
 
         private Map CalculateMapFromScratch(Position3 position)
         {
-            Random.seed = Seed;
+            Random.InitState(Seed);
             var map = new Map();
 
             for (var x = 0; x < Chunk.Width; x++)
